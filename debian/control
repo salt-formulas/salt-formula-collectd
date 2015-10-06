@@ -1,0 +1,15 @@
+Source: salt-formula-collectd
+Maintainer: Ales Komarek <ales.komarek@tcpcloud.eu>
+Section: admin
+Priority: optional
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.6
+Homepage: http://www.tcpcloud.eu
+Vcs-Browser: https://github.com/tcpcloud/salt-formula-collectd
+Vcs-Git: https://github.com/tcpcloud/salt-formula-collectd.git
+
+Package: salt-formula-collectd
+Architecture: all
+Depends: ${misc:Depends}, salt-master, reclass
+Description: Collectd salt formula
+ Install and configure Collectd service.

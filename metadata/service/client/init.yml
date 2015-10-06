@@ -1,0 +1,7 @@
+applications:
+- collectd
+parameters:
+  collectd:
+    client:
+      enabled: true
+      read_interval: 60
