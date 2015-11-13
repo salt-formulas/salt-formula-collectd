@@ -1,6 +1,0 @@
-parameters:
-  collectd:
-    client:
-      plugin:
-        network_metering:
-          enabled: true
