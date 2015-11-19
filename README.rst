@@ -7,7 +7,7 @@ Collectd is a daemon which collects system performance statistics periodically a
 Sample pillars
 ==============
 
-Send data over TCP to Graphite Carbon (old way plugins)
+Send data over TCP to Graphite Carbon
 
 .. code-block:: yaml
 
@@ -15,34 +15,10 @@ Send data over TCP to Graphite Carbon (old way plugins)
       client:
         enabled: true
         read_interval: 60
-        plugins:
-        - name: cpu
-        - name: df
-        - name: disk
-        - name: entropy
-        - name: interface
-        - name: load
-        - name: memory
-        - name: processes
-        - name: swap
-        - name: uptime
-        - name: users
-        - name: write_graphite
-          host: carbon1.comain.com
-          port: 2003
-
-Gather libvirt data from local KVM
-
-.. code-block:: yaml
-
-    collectd:
-      client:
-        enabled: true
-        read_interval: 60
-        plugins:
-        - name: cpu
-        - name: libvirt
-          connection: 'qemu:///system'
+        backend:
+          carbon:
+            host: carbon1.comain.com
+            port: 2003
 
 Send data over AMQP
 
@@ -52,28 +28,38 @@ Send data over AMQP
       client:
         enabled: true
         read_interval: 60
-        plugins:
-        - name: cpu
-        - name: users
-        - name: amqp
-          host: broker1.comain.com
-          port: 5672
-          user: monitor
-          password: amqp-pwd
-          virtual_host: '/monitor'
+        backend:
+          amqp:
+            host: broker1.comain.com
+            port: 5672
+            user: monitor
+            password: amqp-pwd
+           virtual_host: '/monitor'
 
-Send data over carbon
+Monitor network devices, defined in 'external' dictionary
 
 .. code-block:: yaml
 
+    external:
+      network_device:
+        MX80-01:
+          community: test
+          model: Juniper_MX80
+          management: 
+            address: 10.0.0.254
+            port: fxp01
+            engine: snmp/ssh
+          interface:
+            xe-0/0/0:
+              description: MEMBER-OF-LACP-TO-QFX
+              type: 802.3ad
+              subinterface:
+                xe-0/0/0.0:
+                  description: MEMBER-OF-LACP-TO-QFX
     collectd:
       client:
         enabled: true
-        backend:
-          carbon:
-            engine: carbon
-            host: metrics.domain.com
-            port: 2003
+        ...
 
 Read more
 =========
