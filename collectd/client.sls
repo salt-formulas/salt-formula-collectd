@@ -38,32 +38,6 @@ collectd_packages:
   - require:
     - pkg: collectd_packages
 
-{%- for plugin in client.get('plugins', []) %}
-
-{{ client.config_dir }}/{{ plugin.name }}.conf:
-  file.managed:
-  - source: salt://collectd/files/conf.d/{{ plugin.name }}.conf
-  - template: jinja
-  - user: root
-  - mode: 660
-  - require:
-    - file: {{ client.config_dir }}
-  - watch_in:
-    - service: collectd_service
-  - defaults:
-    plugin_name: "{{ plugin.name }}"
-
-{%- if plugin.name == 'network' %}
-/etc/collectd/passwd:
-  file.managed:
-  - source: salt://collectd/files/passwd
-  - template: jinja
-  - require:
-    - file: {{ client.config_dir }}
-{%- endif %}
-
-{%- endfor %}
-
 {%- for service in client.supported_services %}
 {%- if service in grains.roles %}
 
