@@ -85,6 +85,19 @@ collectd_packages:
 {%- endif %}
 {%- endfor %}
 
+{%- if pillar.get('external', {}).network_device is defined %}
+{{ client.config_dir }}/network_snmp.conf:
+  file.managed:
+  - source: salt://collectd/files/conf.d/network_snmp.conf
+  - template: jinja
+  - user: root
+  - mode: 660
+  - require:
+    - file: {{ client.config_dir }}
+  - watch_in:
+    - service: collectd_service
+{%- endif %}
+
 /etc/collectd/filters.conf:
   file.managed:
   - source: salt://collectd/files/filters.conf
