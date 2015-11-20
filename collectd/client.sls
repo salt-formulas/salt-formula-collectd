@@ -60,9 +60,9 @@ collectd_packages:
 {%- endfor %}
 
 {%- if pillar.get('external', {}).network_device is defined %}
-{{ client.config_dir }}/network_snmp.conf:
+{{ client.config_dir }}/plugin_snmp.conf:
   file.managed:
-  - source: salt://collectd/files/conf.d/network_snmp.conf
+  - source: salt://collectd/files/plugin_snmp.conf
   - template: jinja
   - user: root
   - mode: 660
