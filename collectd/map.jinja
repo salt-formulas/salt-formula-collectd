@@ -16,14 +16,14 @@
         'supported_services': supported_services
     },
     'Debian': {
-        'pkgs': ['collectd-core'],
+        'pkgs': ['collectd-core', 'snmp'],
         'service': 'collectd',
         'config_file': '/etc/collectd/collectd.conf',
         'config_dir': '/etc/collectd/conf.d',
         'supported_services': supported_services
     },
     'RedHat': {
-        'pkgs': ['collectd', 'collectd-virt', 'collectd-ping', ],
+        'pkgs': ['collectd', 'collectd-virt', 'collectd-ping', 'net-snmp'],
         'service': 'collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
