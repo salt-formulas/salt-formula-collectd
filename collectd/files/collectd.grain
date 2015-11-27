@@ -1,4 +1,4 @@
-collectd_plugin:
+collectd_plugins:
 
 {%- for service_name, service in pillar.items() %}
 {%- if service.get('_support', {}).get('collectd', {}).get('enabled', False) %}
