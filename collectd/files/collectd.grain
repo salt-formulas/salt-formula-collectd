@@ -1,8 +1,9 @@
 collectd_plugin:
+
 {%- for service_name, service in pillar.items() %}
 {%- if service.get('_support', {}).get('collectd', {}).get('enabled', False) %}
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
-{%- macro indent_grains_dict() %}{% include grains_fragment_file %}{% endmacro %}
+{% macro indent_grains_dict() %}{% include grains_fragment_file %}{% endmacro %}
 {{- indent_grains_dict()|indent(2, true) }}
 {%- endif %}
 {%- endfor %}
