@@ -1,4 +1,5 @@
 collectd_plugin:
+
 {%- for service_name, service in pillar.items() %}
 {%- if service.get('_support', {}).get('collectd', {}).get('enabled', False) %}
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
