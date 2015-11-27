@@ -39,15 +39,23 @@ collectd_client_packages:
   - require:
     - pkg: collectd_client_packages
 
+collectd_client_plugins_grains_dir:
+  file.directory:
+  - name: /etc/salt/grains.d
+  - mode: 700
+  - makedirs: true
+  - user: root
+
 collectd_client_plugins_grain:
   file.managed:
-  - name: /etc/salt/grains.d/collectd_plugins
-  - source: salt://collectd/files/plugins.grain
+  - name: /etc/salt/grains.d/collectd
+  - source: salt://collectd/files/collectd.grain
   - template: jinja
   - user: root
   - mode: 600
   - require:
     - pkg: collectd_client_packages
+    - file: collectd_client_plugins_grains_dir
 
 {%- set collectd_plugin_yaml = salt['cmd.run']('[ -e /etc/salt/grains.d/collectd_plugins ] && cat /etc/salt/grains.d/collectd_plugins || echo "collectd_plugin: {}"') %}
 {%- load_yaml as collectd_plugin %}
