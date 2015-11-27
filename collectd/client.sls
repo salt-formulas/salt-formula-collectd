@@ -1,7 +1,7 @@
 {%- from "collectd/map.jinja" import client with context %}
 {%- if client.enabled %}
 
-{% if grains.os == 'Ubuntu' and (grains.osrelease in ['10.04', '12.04']) %}
+{%- if grains.os == 'Ubuntu' and (grains.osrelease in ['10.04', '12.04']) %}
 
 collectd_repo:
   pkgrepo.managed:
@@ -9,16 +9,16 @@ collectd_repo:
   - ppa: nikicat/collectd
   - file: /etc/apt/sources.list.d/collectd.list
   - require_in:
-    - pkg: collectd_packages
+    - pkg: collectd_client_packages
 
 collectd_amqp_packages:
   pkg.installed:
   - names: 
     - librabbitmq0
 
-{% endif %}
+{%- endif %}
 
-collectd_packages:
+collectd_client_packages:
   pkg.installed:
   - names: {{ client.pkgs }}
 
@@ -28,49 +28,60 @@ collectd_packages:
   - mode: 750
   - makedirs: true
   - require:
-    - pkg: collectd_packages
+    - pkg: collectd_client_packages
 
 {{ client.config_dir }}:
   file.directory:
   - user: root
   - mode: 750
   - makedirs: true
+  - clean: true
   - require:
-    - pkg: collectd_packages
+    - pkg: collectd_client_packages
 
-{%- for service in client.supported_services %}
-{%- if service in grains.roles %}
+collectd_client_plugins_grains_dir:
+  file.directory:
+  - name: /etc/salt/grains.d
+  - mode: 700
+  - makedirs: true
+  - user: root
 
-{%- for service_group in service.split('.') %}
-{%- if loop.first %}
-{{ client.config_dir }}/{{ service|replace('.', '_') }}.conf:
+collectd_client_plugins_grain:
   file.managed:
-  - source: salt://{{ service_group }}/files/collectd.conf
+  - name: /etc/salt/grains.d/collectd
+  - source: salt://collectd/files/collectd.grain
   - template: jinja
+  - user: root
+  - mode: 600
+  - require:
+    - pkg: collectd_client_packages
+    - file: collectd_client_plugins_grains_dir
+
+{%- set collectd_plugin_yaml = salt['cmd.run']('[ -e /etc/salt/grains.d/collectd_plugins ] && cat /etc/salt/grains.d/collectd_plugins || echo "collectd_plugin: {}"') %}
+{%- load_yaml as collectd_plugin %}
+{{ collectd_plugin_yaml }}
+{%- endload %}
+
+{%- for plugin_name, plugin in collectd_plugin.collectd_plugin.iteritems() %}
+
+{{ client.config_dir }}/{{ plugin_name }}.conf:
+  file.managed:
+  {%- if plugin.template is defined %}
+  - source: salt://{{ plugin.template }}
+  - template: jinja
+  - defaults:
+    plugin: {{ plugin|yaml }}
+  {%- else %}
+  - contents: "LoadPlugin {{ plugin.plugin }}"
+  {%- endif %}
   - user: root
   - mode: 660
   - require:
     - file: {{ client.config_dir }}
   - watch_in:
     - service: collectd_service
-{%- endif %}
-{%- endfor %}
 
-{%- endif %}
 {%- endfor %}
-
-{%- if pillar.get('external', {}).network_device is defined %}
-{{ client.config_dir }}/plugin_snmp.conf:
-  file.managed:
-  - source: salt://collectd/files/plugin_snmp.conf
-  - template: jinja
-  - user: root
-  - mode: 660
-  - require:
-    - file: {{ client.config_dir }}
-  - watch_in:
-    - service: collectd_service
-{%- endif %}
 
 /etc/collectd/filters.conf:
   file.managed:
@@ -110,7 +121,7 @@ collectd_packages:
 
 {%- for backend_name, backend in client.backend.iteritems() %}
 
-{{ client.config_dir }}/{{ backend_name }}.conf:
+{{ client.config_dir }}/collectd_writer_{{ backend_name }}.conf:
   file.managed:
   - source: salt://collectd/files/backend/{{ backend.engine }}.conf
   - template: jinja
@@ -131,6 +142,6 @@ collectd_service:
   - name: collectd
   - enable: true
   - require:
-    - pkg: collectd_packages
+    - pkg: collectd_client_packages
 
 {%- endif %}

@@ -1,5 +1,7 @@
 applications:
 - collectd
+classes:
+- service.collectd.support
 parameters:
   collectd:
     client:

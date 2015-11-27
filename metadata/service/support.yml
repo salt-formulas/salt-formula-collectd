@@ -1,0 +1,11 @@
+parameters:
+  collectd:
+    _support:
+      collectd:
+        enabled: true
+      heka:
+        enabled: false
+      sensu:
+        enabled: true
+      sphinx:
+        enabled: true
