@@ -2,10 +2,10 @@ parameters:
   collectd:
     _support:
       collectd:
-        enabled: true
+        enabled: false
       heka:
         enabled: false
       sensu:
         enabled: true
       sphinx:
-        enabled: true
+        enabled: false
