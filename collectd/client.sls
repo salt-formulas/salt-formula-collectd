@@ -73,9 +73,9 @@ collectd_client_grain_validity_check:
   pkg.installed:
   - name: python-yaml 
   cmd.wait:
-  - name: python -c "import yaml; stream = file('/etc/salt/grains.d/sphinx', 'r'); yaml.load(stream); stream.close()"
+  - name: python -c "import yaml; stream = file('/etc/salt/grains.d/collectd', 'r'); yaml.load(stream); stream.close()"
   - require:
-    - pkg: collectd_client_grain
+    - pkg: collectd_client_grain_validity_check
   - watch:
     - file: collectd_client_grain
 
