@@ -52,9 +52,7 @@ collectd_client_grains_dir:
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
 {%- macro load_grains_file() %}{% include grains_fragment_file %}{% endmacro %}
 {%- set grains_yaml = load_grains_file()|load_yaml %}
-{%- if grains_yaml.plugin is defined %}
 {%- set _dummy = grains.collectd.plugin.update(grains_yaml.plugin) %}
-{%- endif %}
 {%- endif %}
 {%- endfor %}
 
@@ -81,7 +79,7 @@ collectd_client_grain_validity_check:
   - watch:
     - file: collectd_client_grain
 
-{%- for plugin_name, plugin in grains.plugin.iteritems() %}
+{%- for plugin_name, plugin in grains.collectd.plugin.iteritems() %}
 
 {{ client.config_dir }}/{{ plugin_name }}.conf:
   file.managed:
