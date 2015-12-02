@@ -52,7 +52,7 @@ collectd_client_grains_dir:
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
 {%- macro load_grains_file() %}{% include grains_fragment_file %}{% endmacro %}
 {%- set grains_yaml = load_grains_file()|load_yaml %}
-{%- set _dummy = grains.collectd.plugin.update(grains_yaml.check) %}
+{%- set _dummy = grains.collectd.plugin.update(grains_yaml.plugin) %}
 {%- endif %}
 {%- endfor %}
 
