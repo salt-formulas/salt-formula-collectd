@@ -1,1 +1,1 @@
-{{ grains|yaml(False) }}
+{{ role_grains|yaml(False) }}
