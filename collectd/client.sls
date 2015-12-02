@@ -39,14 +39,14 @@ collectd_client_packages:
   - require:
     - pkg: collectd_client_packages
 
-collectd_client_plugins_grains_dir:
+collectd_client_grains_dir:
   file.directory:
   - name: /etc/salt/grains.d
   - mode: 700
   - makedirs: true
   - user: root
 
-collectd_client_plugins_grain:
+collectd_client_grain:
   file.managed:
   - name: /etc/salt/grains.d/collectd
   - source: salt://collectd/files/collectd.grain
@@ -55,12 +55,17 @@ collectd_client_plugins_grain:
   - mode: 600
   - require:
     - pkg: collectd_client_packages
-    - file: collectd_client_plugins_grains_dir
+    - file: collectd_client_grains_dir
 
-{%- set collectd_plugin_yaml = salt['cmd.run']('[ -e /etc/salt/grains.d/collectd_plugins ] && cat /etc/salt/grains.d/collectd_plugins || echo "collectd_plugin: {}"') %}
-{%- load_yaml as collectd_plugin %}
-{{ collectd_plugin_yaml }}
-{%- endload %}
+collectd_client_grain_validity_check:
+  pkg.installed:
+  - name: python-yaml 
+  cmd.wait:
+  - name: python -c "import yaml; stream = file('/etc/salt/grains.d/sphinx', 'r'); yaml.load(stream); stream.close()"
+  - require:
+    - pkg: collectd_client_grain
+  - watch:
+    - file: collectd_client_grain
 
 {%- for plugin_name, plugin in collectd_plugin.collectd_plugin.iteritems() %}
 
