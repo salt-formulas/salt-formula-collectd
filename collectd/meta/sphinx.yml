@@ -20,5 +20,5 @@ doc:
           value: {{ backend.host }}:{{ backend.port }}
 {%- endfor %}
         plugins:
-          value: {% for plugin_name, plugin in service_grains.collectd.plugin.iteritems() %}{{ plugin_name }},{% endfor %}
+          value: {% for plugin_name, plugin in service_grains.collectd.plugin.iteritems() %}{{ plugin.plugin }},{% endfor %}
 
