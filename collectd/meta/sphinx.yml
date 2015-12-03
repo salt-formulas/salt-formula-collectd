@@ -5,7 +5,7 @@ doc:
   role:
     client:
       name: client
-      param: {}
+      param:
 {%- for backend_name, backend in client.backend.iteritems() %}
         backend_{{ backend_name }}: 
           value: {{ backend.host }}:{{ backend.port }}
