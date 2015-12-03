@@ -1,7 +1,16 @@
-{%- if pillar.get('external', {}).network_device is defined %}
 plugin:
+  collectd_processes:
+    plugin: processes
+    interval: 60
+    template: collectd/files/collectd_processes.conf
+    process:
+      collectd:
+        metric: collectd.client
+{%- if pillar.get('external', {}).network_device is defined %}
   collectd_network_device:
     plugin: snmp
+    interval: 60
+    template: collectd/files/collectd_snmp.conf
     data:
       std_traffic:
         type: if_octets
@@ -18,6 +27,4 @@ plugin:
         - 1.3.6.1.2.1.31.1.1.1.7
         - 1.3.6.1.2.1.31.1.1.1.11
     host: {{ pillar.external.network_device }}
-{%- else %}
-plugin: {}
 {%- endif %}

@@ -46,13 +46,13 @@ collectd_client_grains_dir:
   - makedirs: true
   - user: root
 
-{%- set role_grains = {'collectd': {'plugin': {}}} %}
+{%- set service_grains = {'collectd': {'plugin': {}}} %}
 {%- for service_name, service in pillar.items() %}
 {%- if service.get('_support', {}).get('collectd', {}).get('enabled', False) %}
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
 {%- macro load_grains_file() %}{% include grains_fragment_file %}{% endmacro %}
 {%- set grains_yaml = load_grains_file()|load_yaml %}
-{%- set _dummy = role_grains.collectd.plugin.update(grains_yaml.plugin) %}
+{%- set _dummy = service_grains.collectd.plugin.update(grains_yaml.plugin) %}
 {%- endif %}
 {%- endfor %}
 
@@ -64,7 +64,7 @@ collectd_client_grain:
   - user: root
   - mode: 600
   - defaults:
-    role_grains: {{ role_grains|yaml }}
+    service_grains: {{ service_grains|yaml }}
   - require:
     - pkg: collectd_client_packages
     - file: collectd_client_grains_dir
@@ -79,7 +79,7 @@ collectd_client_grain_validity_check:
   - watch:
     - file: collectd_client_grain
 
-{%- for plugin_name, plugin in role_grains.collectd.plugin.iteritems() %}
+{%- for plugin_name, plugin in service_grains.collectd.plugin.iteritems() %}
 
 {{ client.config_dir }}/{{ plugin_name }}.conf:
   file.managed:
@@ -130,7 +130,9 @@ collectd_client_grain_validity_check:
   - template: jinja
   - user: root
   - group: root
-  - mode: 660
+  - mode: 640
+  - defaults:
+    service_grains: {{ service_grains|yaml }}
   - require:
     - file: {{ client.config_dir }}
   - watch_in:

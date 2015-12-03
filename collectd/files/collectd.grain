@@ -1,1 +1,1 @@
-{{ role_grains|yaml(False) }}
+{{ service_grains|yaml(False) }}

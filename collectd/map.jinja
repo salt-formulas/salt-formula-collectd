@@ -1,11 +1,3 @@
-{% set supported_services = [
-  'linux.system',
-  'memcached.server',
-  'mysql.server',
-  'nginx.server',
-  'nova.compute',
-  'postgresql.server',
-] %}
 
 {% set client = salt['grains.filter_by']({
     'Arch': {
@@ -13,20 +5,17 @@
         'service': 'collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
-        'supported_services': supported_services
     },
     'Debian': {
         'pkgs': ['collectd-core', 'snmp'],
         'service': 'collectd',
         'config_file': '/etc/collectd/collectd.conf',
         'config_dir': '/etc/collectd/conf.d',
-        'supported_services': supported_services
     },
     'RedHat': {
         'pkgs': ['collectd', 'collectd-virt', 'collectd-ping', 'net-snmp'],
         'service': 'collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
-        'supported_services': supported_services
     },
 }, merge=salt['pillar.get']('collectd:client')) %}
