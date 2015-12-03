@@ -1,0 +1,12 @@
+{%- from "collectd/map.jinja" import client with context %}
+doc:
+  name: collectd
+  description: Collectd is a daemon which collects system performance statistics periodically and provides mechanisms to store the values in a variety of ways, for example in RRD files.
+  role:
+    client:
+      name: client
+      param: {}
+{%- for backend_name, backend in client.backend.iteritems() %}
+        backend_{{ backend_name }}: 
+          value: {{ backend.host }}:{{ backend.port }}
+{%- endfor %}
