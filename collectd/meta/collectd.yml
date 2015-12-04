@@ -4,8 +4,8 @@ plugin:
     interval: 60
     template: collectd/files/collectd_processes.conf
     process:
-      collectd:
-        metric: collectd.client
+      collectdmon:
+        metric: collectdmon
 {%- if pillar.get('external', {}).network_device is defined %}
   collectd_network_device:
     plugin: snmp
