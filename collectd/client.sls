@@ -16,6 +16,13 @@ collectd_amqp_packages:
   - names: 
     - librabbitmq0
 
+{%- elif grains.os == 'Ubuntu' and (grains.osrelease in ['14.04', '16.04']) %}
+
+collectd_amqp_packages:
+  pkg.installed:
+  - names: 
+    - librabbitmq1
+
 {%- endif %}
 
 collectd_client_packages:
