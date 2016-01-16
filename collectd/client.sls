@@ -96,7 +96,7 @@ collectd_client_grain_validity_check:
   - defaults:
     plugin: {{ plugin|yaml }}
   {%- else %}
-  - contents: "LoadPlugin {{ plugin.plugin }}"
+  - contents: "LoadPlugin {{ plugin.plugin }}\n"
   {%- endif %}
   - user: root
   - mode: 660
