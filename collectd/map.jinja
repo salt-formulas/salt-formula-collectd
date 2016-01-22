@@ -7,13 +7,13 @@
         'config_dir': '/etc/collectd.d',
     },
     'Debian': {
-        'pkgs': ['collectd-core', 'snmp'],
+        'pkgs': ['collectd-core', 'snmp', 'python-yaml'],
         'service': 'collectd',
         'config_file': '/etc/collectd/collectd.conf',
         'config_dir': '/etc/collectd/conf.d',
     },
     'RedHat': {
-        'pkgs': ['collectd', 'collectd-ping', 'net-snmp'],
+        'pkgs': ['collectd', 'collectd-ping', 'net-snmp', 'PyYAML'],
         'service': 'collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',

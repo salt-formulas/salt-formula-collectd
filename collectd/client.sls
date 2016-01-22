@@ -77,8 +77,6 @@ collectd_client_grain:
     - file: collectd_client_grains_dir
 
 collectd_client_grain_validity_check:
-  pkg.installed:
-  - name: python-yaml 
   cmd.wait:
   - name: python -c "import yaml; stream = file('/etc/salt/grains.d/collectd', 'r'); yaml.load(stream); stream.close()"
   - require:
