@@ -80,7 +80,7 @@ collectd_client_grain_validity_check:
   cmd.wait:
   - name: python -c "import yaml; stream = file('/etc/salt/grains.d/collectd', 'r'); yaml.load(stream); stream.close()"
   - require:
-    - pkg: collectd_client_grain_validity_check
+    - pkg: collectd_client_packages
   - watch:
     - file: collectd_client_grain
 
