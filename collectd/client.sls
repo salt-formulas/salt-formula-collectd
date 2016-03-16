@@ -98,7 +98,7 @@ collectd_client_grain_validity_check:
   {%- endif %}
   - user: root
   - mode: 660
-  - require:
+  - require_in:
     - file: {{ client.config_dir }}
   - watch_in:
     - service: collectd_service
@@ -154,7 +154,7 @@ collectd_client_grain_validity_check:
   - mode: 660
   - defaults:
     backend_name: "{{ backend_name }}"
-  - require:
+  - require_in:
     - file: {{ client.config_dir }}
   - watch_in:
     - service: collectd_service
