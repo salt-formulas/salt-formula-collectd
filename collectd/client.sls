@@ -37,14 +37,18 @@ collectd_client_packages:
   - require:
     - pkg: collectd_client_packages
 
-{{ client.config_dir }}:
+collectd_client_conf_dir:
   file.directory:
+  - name: {{ client.config_dir }}
   - user: root
   - mode: 750
   - makedirs: true
-  - clean: true
   - require:
     - pkg: collectd_client_packages
+
+collectd_client_conf_dir_clean:
+  file.directory:
+  - clean: true
 
 collectd_client_grains_dir:
   file.directory:
@@ -98,8 +102,10 @@ collectd_client_grain_validity_check:
   {%- endif %}
   - user: root
   - mode: 660
+  - require:
+    - file: collectd_client_conf_dir
   - require_in:
-    - file: {{ client.config_dir }}
+    - file: collectd_client_conf_dir_clean
   - watch_in:
     - service: collectd_service
 
@@ -115,7 +121,9 @@ collectd_client_grain_validity_check:
   - watch_in:
     - service: collectd_service
   - require:
-    - file: {{ client.config_dir }}
+    - file: collectd_client_conf_dir
+  - require_in:
+    - file: collectd_client_conf_dir_clean
 
 /etc/collectd/thresholds.conf:
   file.managed:
@@ -127,7 +135,9 @@ collectd_client_grain_validity_check:
   - watch_in:
     - service: collectd_service
   - require:
-    - file: {{ client.config_dir }}
+    - file: collectd_client_conf_dir
+  - require_in:
+    - file: collectd_client_conf_dir_clean
 
 {{ client.config_file }}:
   file.managed:
@@ -139,7 +149,9 @@ collectd_client_grain_validity_check:
   - defaults:
     service_grains: {{ service_grains|yaml }}
   - require:
-    - file: {{ client.config_dir }}
+    - file: collectd_client_conf_dir
+  - require_in:
+    - file: collectd_client_conf_dir_clean
   - watch_in:
     - service: collectd_service
 
@@ -154,8 +166,10 @@ collectd_client_grain_validity_check:
   - mode: 660
   - defaults:
     backend_name: "{{ backend_name }}"
+  - require:
+    - file: collectd_client_conf_dir
   - require_in:
-    - file: {{ client.config_dir }}
+    - file: collectd_client_conf_dir_clean
   - watch_in:
     - service: collectd_service
 
