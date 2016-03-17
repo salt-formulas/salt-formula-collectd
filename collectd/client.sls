@@ -48,6 +48,7 @@ collectd_client_conf_dir:
 
 collectd_client_conf_dir_clean:
   file.directory:
+  - name: {{ client.config_dir }}
   - clean: true
 
 collectd_client_grains_dir:
