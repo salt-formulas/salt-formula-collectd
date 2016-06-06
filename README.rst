@@ -61,6 +61,26 @@ Monitor network devices, defined in 'external' dictionary
         enabled: true
         ...
 
+Collecting the SNMP metrics
+
+.. code-block:: yaml
+
+    collectd:
+      client:
+        data:
+          connected_devices:
+            type: devices
+            values:
+            - IF-MIB::ifNumber.0
+        host:
+          ubiquity:
+            address: 10.0.0.1
+            community: public
+            version: 2
+            data:
+            - connected_devices
+
+
 Read more
 =========
 
