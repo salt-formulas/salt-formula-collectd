@@ -5,7 +5,7 @@ plugin:
     template: collectd/files/collectd_processes.conf
     process:
       collectdmon:
-        metric: collectdmon
+        match: collectdmon
 {%- if pillar.get('external', {}).network_device is defined %}
   collectd_network_device:
     plugin: snmp
