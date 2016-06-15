@@ -1,0 +1,8 @@
+name: collectd
+os: Arch, Debian, RedHat
+os_family: Arch, Debian, RedHat
+version: 201606
+release: 1
+summary: Collectd salt formula
+description: Install and configure Collectd service.
+top_level_dir: collectd
