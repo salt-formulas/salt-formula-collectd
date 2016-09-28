@@ -6,6 +6,20 @@ plugin:
     process:
       collectdmon:
         match: collectdmon
+{%- if pillar.collectd.client.get('check', {}).curl is defined %}
+  collectd_curl:
+    plugin: curl
+    interval: 60
+    template: collectd/files/collectd_curl.conf
+    data: {{ pillar.collectd.client.check.curl|yaml }}
+{%- endif %}
+{%- if pillar.collectd.client.get('check', {}).ping is defined %}
+  collectd_ping:
+    plugin: ping
+    interval: 60
+    template: collectd/files/collectd_ping.conf
+    data: {{ pillar.collectd.client.check.ping|yaml }}
+{%- endif %}
 {%- if pillar.get('external', {}).network_device is defined %}
   collectd_network_device:
     plugin: snmp

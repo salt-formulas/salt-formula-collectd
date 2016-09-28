@@ -81,6 +81,33 @@ Collecting the SNMP metrics
             - connected_devices
 
 
+Collecting the cURL response times and codes
+
+.. code-block:: yaml
+
+    collectd:
+      client:
+        check:
+          curl:
+            service1:
+              url: "https://service.domain.com:443/"
+            service2:
+              url: "https://service.domain.com:443/"
+
+
+Collecting the ping response times
+
+.. code-block:: yaml
+
+    collectd:
+      client:
+        check:
+          ping:
+            host_label1:
+              host: "172.10.31.14"
+            host_label2:
+              host: "172.10.31.12"
+
 Read more
 =========
 
