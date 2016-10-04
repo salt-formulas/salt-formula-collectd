@@ -7,6 +7,9 @@ Collectd is a daemon which collects system performance statistics periodically a
 Sample pillars
 ==============
 
+Data writers
+------------
+
 Send data over TCP to Graphite Carbon
 
 .. code-block:: yaml
@@ -16,7 +19,8 @@ Send data over TCP to Graphite Carbon
         enabled: true
         read_interval: 60
         backend:
-          carbon:
+          carbon_service:
+            engine: carbon
             host: carbon1.comain.com
             port: 2003
 
@@ -29,12 +33,32 @@ Send data over AMQP
         enabled: true
         read_interval: 60
         backend:
-          amqp:
+          amqp_broker:
+            engine: amqp
             host: broker1.comain.com
             port: 5672
             user: monitor
             password: amqp-pwd
-           virtual_host: '/monitor'
+            virtual_host: '/monitor'
+
+Send data over HTTP
+
+.. code-block:: yaml
+
+    collectd:
+      client:
+        enabled: true
+        read_interval: 60
+        backend:
+          http_service:
+            engine: http
+            host: service.comain.com
+            port: 8123
+
+
+Data collectors
+---------------
+
 
 Monitor network devices, defined in 'external' dictionary
 

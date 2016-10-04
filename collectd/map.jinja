@@ -5,17 +5,26 @@
         'service': 'collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
+        'read_interval': 60,
+        'file_logging': True,
+        'remote_collector': False
     },
     'Debian': {
         'pkgs': ['collectd-core', 'snmp', 'python-yaml'],
         'service': 'collectd',
         'config_file': '/etc/collectd/collectd.conf',
         'config_dir': '/etc/collectd/conf.d',
+        'read_interval': 60,
+        'file_logging': True,
+        'remote_collector': False
     },
     'RedHat': {
         'pkgs': ['collectd', 'collectd-ping', 'net-snmp', 'PyYAML'],
         'service': 'collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
+        'read_interval': 60,
+        'file_logging': True,
+        'remote_collector': False
     },
 }, merge=salt['pillar.get']('collectd:client')) %}
