@@ -55,13 +55,19 @@ collectd_client_grains_dir:
   file.recurse:
   - source: salt://collectd/files/plugin
 
-{%- set service_grains = {'collectd': {'plugin': {}}} %}
+{%- set service_grains = {'collectd': {'remote_plugin': {}, 'local_plugin': {}}} %}
+
 {%- for service_name, service in pillar.items() %}
 {%- if service.get('_support', {}).get('collectd', {}).get('enabled', False) %}
+
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
-{%- macro load_grains_file() %}{% include grains_fragment_file %}{% endmacro %}
+{%- macro load_grains_file() %}{% include grains_fragment_file ignore missing %}{% endmacro %}
 {%- set grains_yaml = load_grains_file()|load_yaml %}
-{%- set _dummy = service_grains.collectd.plugin.update(grains_yaml.plugin) %}
+
+{%- if grains_yaml is mapping %}
+{%- set service_grains = salt['grains.filter_by']({'default': {'collectd': service_grains}}, merge=grains_yaml) %}
+{%- endif %}
+
 {%- endif %}
 {%- endfor %}
 
@@ -86,7 +92,7 @@ collectd_client_grain_validity_check:
   - watch:
     - file: collectd_client_grain
 
-{%- for plugin_name, plugin in service_grains.collectd.plugin.iteritems() %}
+{%- for plugin_name, plugin in service_grains.collectd.local_plugin.iteritems() %}
 
 {%- if (plugin.get('execution', 'local') == 'local' or client.remote_collector) and plugin.get('plugin', 'native') not in ['python'] %}
 
