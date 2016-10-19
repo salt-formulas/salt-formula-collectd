@@ -65,7 +65,7 @@ collectd_client_grains_dir:
 {%- set grains_yaml = load_grains_file()|load_yaml %}
 
 {%- if grains_yaml is mapping %}
-{%- set service_grains = salt['grains.filter_by']({'default': {'collectd': service_grains}}, merge=grains_yaml) %}
+{%- set service_grains = salt['grains.filter_by']({'default': service_grains}, merge={'collectd': grains_yaml}) %}
 {%- endif %}
 
 {%- endif %}
