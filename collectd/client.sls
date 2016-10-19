@@ -144,7 +144,7 @@ collectd_client_grain_validity_check:
   - group: root
   - mode: 660
   - defaults:
-      plugin: {{ service_grains.collectd.plugin|yaml }}
+      plugin: {{ service_grains.collectd.local_plugin|yaml }}
   - watch_in:
     - service: collectd_service
   - require:
