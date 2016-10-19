@@ -94,7 +94,7 @@ collectd_client_grain_validity_check:
 
 {%- for plugin_name, plugin in service_grains.collectd.local_plugin.iteritems() %}
 
-{%- if (plugin.get('execution', 'local') == 'local' or client.remote_collector) and plugin.get('plugin', 'native') not in ['python'] %}
+{%- plugin.get('plugin', 'native') not in ['python'] %}
 
 {{ client.config_dir }}/{{ plugin_name }}.conf:
   file.managed:
@@ -118,6 +118,37 @@ collectd_client_grain_validity_check:
 {%- endif %}
 
 {%- endfor %}
+
+{%- if client.remote_collector %}
+
+{%- for plugin_name, plugin in service_grains.collectd.local_plugin.iteritems() %}
+
+{%- plugin.get('plugin', 'native') not in ['python'] %}
+
+{{ client.config_dir }}/{{ plugin_name }}.conf:
+  file.managed:
+  {%- if plugin.template is defined %}
+  - source: salt://{{ plugin.template }}
+  - template: jinja
+  - defaults:
+    plugin: {{ plugin|yaml }}
+  {%- else %}
+  - contents: "<LoadPlugin {{ plugin.plugin }}>\n  Globals false\n</LoadPlugin>\n"
+  {%- endif %}
+  - user: root
+  - mode: 660
+  - require:
+    - file: collectd_client_conf_dir
+  - require_in:
+    - file: collectd_client_conf_dir_clean
+  - watch_in:
+    - service: collectd_service
+
+{%- endif %}
+
+{%- endfor %}
+
+{%- endif %}
 
 {%- if client.file_logging %}
 
