@@ -86,7 +86,7 @@ collectd_client_grain_validity_check:
   - watch:
     - file: collectd_client_grain
 
-{%- for plugin_name, plugin in service_grains.collectd.plugin.iteritems() %}
+{%- for plugin_name, plugin in service_grains.collectd.get('plugin', {}).iteritems() %}
 
 {%- if (plugin.get('execution', 'local') == 'local' or client.remote_collector) and plugin.get('plugin', 'native') not in ['python'] %}
 
