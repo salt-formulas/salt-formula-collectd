@@ -5,7 +5,7 @@
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
 {%- macro load_grains_file() %}{% include grains_fragment_file %}{% endmacro %}
 {%- set grains_yaml = load_grains_file()|load_yaml %}
-{%- do service_grains.collectd.local_plugin.update(grains_yaml.local_plugin) %}
+{%- do service_grains.collectd.local_plugin.update(grains_yaml.get('local_plugin', {})) %}
 {%- endif %}
 {%- endfor %}
 doc:
