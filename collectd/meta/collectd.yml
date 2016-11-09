@@ -3,7 +3,7 @@ local_plugin:
     plugin: processes
     template: collectd/files/collectd_processes.conf
     process:
-      collectdmon: {}
+      collectd: {}
   {%- if pillar.collectd.client.get('check', {}).curl is defined %}
   collectd_curl:
     plugin: curl
