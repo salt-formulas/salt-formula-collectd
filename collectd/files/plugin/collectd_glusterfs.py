@@ -33,7 +33,8 @@ class GlusterfsPlugin(base.Base):
 
     def itermetrics(self):
         # Collect peers' status
-        out, err = self.execute([GLUSTER_BINARY, 'peer', 'status'])
+        out, err = self.execute([GLUSTER_BINARY, 'peer', 'status'],
+                                shell=False)
         if not out:
             raise base.CheckException("Failed to execute gluster")
 
