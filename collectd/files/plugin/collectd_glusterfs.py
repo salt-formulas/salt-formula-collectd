@@ -56,7 +56,7 @@ class GlusterfsPlugin(base.Base):
                     v = 0
                     total_by_state['down'] += 1
                 yield {
-                    'type_instance': 'peer',
+                    'type_instance': 'peer_state',
                     'values': v,
                     'meta': {
                         'peer': peer_m.group('peer')
