@@ -38,13 +38,23 @@ class GlusterfsPlugin(base.Base):
         if not out:
             raise base.CheckException("Failed to execute gluster")
 
+        total = 0
+        total_by_state = {
+            'up': 0,
+            'down': 0
+        }
+
         for line in out.split('\n\n'):
             peer_m = peer_re.search(line)
             state_m = state_re.search(line)
             if peer_m and state_m:
-                v = 0
+                total += 1
                 if state_m.group('state') == 'Peer in Cluster (Connected)':
                     v = 1
+                    total_by_state['up'] += 1
+                else:
+                    v = 0
+                    total_by_state['down'] += 1
                 yield {
                     'type_instance': 'peer',
                     'values': v,
@@ -52,6 +62,22 @@ class GlusterfsPlugin(base.Base):
                         'peer': peer_m.group('peer')
                     }
                 }
+
+        for state, count in total_by_state.items():
+            yield {
+                'type_instance': 'peers_count',
+                'values': count,
+                'meta': {
+                    'state': state
+                }
+            }
+            yield {
+                'type_instance': 'peers_percent',
+                'values': 100.0 * count / total,
+                'meta': {
+                    'state': state
+                }
+            }
 
 
 plugin = GlusterfsPlugin(collectd)
