@@ -16,5 +16,7 @@ ExecStart=/usr/sbin/collectd -C {{ config_file }}
 Restart=always
 RestartSec=10
 
+{%- if automatic_starting %}
 [Install]
 WantedBy=multi-user.target
+{%- endif %}

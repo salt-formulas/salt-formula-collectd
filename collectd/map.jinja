@@ -9,6 +9,7 @@
         'file_logging': True,
         'syslog_logging': True,
         'use_fqdn': True,
+        'automatic_starting': True,
     },
     'Debian': {
         'pkgs': ['collectd-core', 'snmp', 'python-yaml', 'libpython2.7', 'python-simplejson'],
@@ -19,6 +20,7 @@
         'file_logging': True,
         'syslog_logging': True,
         'use_fqdn': True,
+        'automatic_starting': True,
     },
     'RedHat': {
         'pkgs': ['collectd', 'collectd-ping', 'net-snmp', 'PyYAML'],
@@ -29,6 +31,7 @@
         'file_logging': True,
         'syslog_logging': True,
         'use_fqdn': True,
+        'automatic_starting': True,
     },
 }, merge=salt['pillar.get']('collectd:client')) %}
 
@@ -41,5 +44,6 @@
         'file_logging': True,
         'syslog_logging': False,
         'use_fqdn': True,
+        'automatic_starting': True,
     }
 }, merge=salt['pillar.get']('collectd:remote_client')) %}

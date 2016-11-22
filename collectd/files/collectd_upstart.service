@@ -2,8 +2,10 @@
 
 description     "{{ service_name }}"
 
+{%- if automatic_starting %}
 start on runlevel [2345]
 stop on runlevel [!2345]
+{%- endif %}
 
 respawn
 

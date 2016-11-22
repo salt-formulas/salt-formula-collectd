@@ -8,3 +8,4 @@ parameters:
       enabled: true
       read_interval: 10
       use_fqdn: false
+      automatic_starting: true

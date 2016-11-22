@@ -29,6 +29,7 @@ include:
   - defaults:
     service_name: {{ remote_client.service }}
     config_file: {{ remote_client.config_file }}
+    automatic_starting: {{ remote_client.automatic_starting }}
   - template: jinja
   - require_in:
     - service: {{ remote_client.service }}_service

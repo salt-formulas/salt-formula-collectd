@@ -32,8 +32,6 @@
     - file: {{ client.service }}_client_conf_dir
   - require_in:
     - file: {{ client.service }}_client_conf_dir_clean
-  - watch_in:
-    - service: {{ client.service }}_service
 
 {%- endif %}
 
@@ -50,8 +48,6 @@
   - user: root
   - group: root
   - mode: 660
-  - watch_in:
-    - service: {{ client.service }}_service
   - require:
     - file: {{ client.service }}_client_conf_dir
   - require_in:
@@ -68,8 +64,6 @@
   - mode: 660
   - defaults:
       plugin: {{ plugins|yaml }}
-  - watch_in:
-    - service: {{ client.service }}_service
   - require:
     - file: {{ client.service }}_client_conf_dir
   - require_in:
@@ -85,8 +79,6 @@
   - defaults:
     plugin: {{ plugins|yaml }}
     client: {{ client|yaml }}
-  - watch_in:
-    - service: {{ client.service }}_service
   - require:
     - file: {{ client.service }}_client_conf_dir
   - require_in:
@@ -106,8 +98,6 @@
   - mode: 660
   - defaults:
     backend: {{ backend|yaml }}
-  - watch_in:
-    - service: {{ client.service }}_service
   - require:
     - file: {{ client.service }}_client_conf_dir
   - require_in:
@@ -132,8 +122,6 @@
   - mode: 660
   - defaults:
     backend: {{ backend|yaml }}
-  - watch_in:
-    - service: {{ client.service }}_service
   - require:
     - file: {{ client.service }}_client_conf_dir
   - require_in:
@@ -143,8 +131,15 @@
 
 
 {{ client.service }}_service:
+{%- if client.automatic_starting %}
   service.running:
-  - name: {{ client.service }}
   - enable: true
+  - watch:
+    - file: {{ client.config_file }}
+    - file: {{ client.config_dir }}/*
+{%- else %}
+  service.disabled:
+{%- endif %}
+  - name: {{ client.service }}
 
 {%- endif %}
