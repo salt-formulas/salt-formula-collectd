@@ -60,9 +60,9 @@ class ContrailApiPlugin(base.Base):
             )
             if node.key.lower() == "url":
                 self.urls[node.values[0]] = node.values[1]
-            elif node.key.lower() == 'xml_element':
+            elif node.key.lower() == 'xmlelement':
                 self.xml_element[node.values[0]] = node.values[1]
-            elif node.key.lower() == 'result_type':
+            elif node.key.lower() == 'resulttype':
                 self.result_type[node.values[0]] = node.values[1]
             elif node.key.lower() == 'state':
                 self.state[node.values[0]] = node.values[1]
