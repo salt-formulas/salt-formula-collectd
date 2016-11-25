@@ -1,0 +1,12 @@
+# {{ service_name }}
+
+description     "{{ service_name }}"
+
+{%- if automatic_starting %}
+start on runlevel [2345]
+stop on runlevel [!2345]
+{%- endif %}
+
+respawn
+
+exec /usr/bin/collectd -f -C {{ config_file }}

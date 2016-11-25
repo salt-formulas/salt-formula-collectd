@@ -1,17 +1,26 @@
+{%- from "collectd/map.jinja" import client with context %}
+{%- from "collectd/map.jinja" import remote_client with context %}
 local_plugin:
   collectd_processes:
     plugin: processes
     template: collectd/files/collectd_processes.conf
     process:
-      collectd: {}
-  {%- if pillar.collectd.client.get('check', {}).curl is defined %}
+  {%- if pillar.collectd.get('client', {}).get('enabled', False) %}
+      collectd:
+        match: '(collectd.*{{ client.config_file }}|collectd$)'
+  {%- endif %}
+  {%- if pillar.collectd.get('remote_client', {}).get('enabled', False) %}
+      remote_collectd:
+        match: 'collectd.*{{ remote_client.config_file }}'
+  {%- endif %}
+  {%- if pillar.collectd.get('client', {}).get('check', {}).curl is defined %}
   collectd_curl:
     plugin: curl
     execution: local
     template: collectd/files/collectd_curl.conf
     data: {{ pillar.collectd.client.check.curl|yaml }}
   {%- endif %}
-  {%- if pillar.collectd.client.get('check', {}).ping is defined %}
+  {%- if pillar.collectd.get('client', {}).get('check', {}).ping is defined %}
   collectd_ping:
     plugin: ping
     execution: local
