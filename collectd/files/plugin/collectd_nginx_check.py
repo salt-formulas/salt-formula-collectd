@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # Copyright 2016 Mirantis, Inc.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the nginx License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.nginx.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,29 +17,30 @@ import collectd
 import collectd_base as base
 import requests
 
-NAME = 'apache'
+NAME = 'nginx'
 
 
-class ApacheCheckPlugin(base.Base):
+class NginxCheckPlugin(base.Base):
 
     def __init__(self, *args, **kwargs):
-        super(ApacheCheckPlugin, self).__init__(*args, **kwargs)
+        super(NginxCheckPlugin, self).__init__(*args, **kwargs)
         self.plugin = NAME
         self.url = None
 
     def config_callback(self, conf):
-        super(ApacheCheckPlugin, self).config_callback(conf)
+        super(NginxCheckPlugin, self).config_callback(conf)
 
         for node in conf.children:
             if node.key == 'Url':
                 self.url = node.values[0]
+                break
 
         if self.url is None:
             self.logger.error("{}: Missing Url parameter".format(NAME))
 
     def read_callback(self):
         try:
-            requests.get(self.url, timeout=5)
+            requests.get(self.url, timeout=self.timeout)
             self.dispatch_check_metric(self.OK)
         except Exception as err:
             msg = "{}: Failed to check service: {}".format(NAME, err)
@@ -47,7 +48,7 @@ class ApacheCheckPlugin(base.Base):
             self.dispatch_check_metric(self.FAIL, msg)
 
 
-plugin = ApacheCheckPlugin(collectd)
+plugin = NginxCheckPlugin(collectd)
 
 
 def config_callback(conf):
