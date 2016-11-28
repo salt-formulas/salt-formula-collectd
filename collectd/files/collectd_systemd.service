@@ -1,0 +1,22 @@
+[Unit]
+Description=Statistics collection and monitoring daemon
+After=local-fs.target network.target
+Requires=local-fs.target network.target
+ConditionPathExists={{ config_file }}
+Documentation=man:collectd(1)
+Documentation=man:collectd.conf(5)
+Documentation=https://collectd.org
+
+[Service]
+Type=notify
+NotifyAccess=main
+EnvironmentFile=-/etc/default/{{ service_name }}
+ExecStartPre=/usr/sbin/collectd -t -C {{ config_file }}
+ExecStart=/usr/sbin/collectd -C {{ config_file }}
+Restart=always
+RestartSec=10
+
+{%- if automatic_starting %}
+[Install]
+WantedBy=multi-user.target
+{%- endif %}
