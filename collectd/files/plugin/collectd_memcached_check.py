@@ -60,6 +60,10 @@ class MemcachedCheckPlugin(base.Base):
 plugin = MemcachedCheckPlugin(collectd)
 
 
+def init_callback():
+    plugin.restore_sigchld()
+
+
 def config_callback(conf):
     plugin.config_callback(conf)
 
@@ -67,5 +71,6 @@ def config_callback(conf):
 def read_callback():
     plugin.read_callback()
 
+collectd.register_init(init_callback)
 collectd.register_config(config_callback)
 collectd.register_read(read_callback)

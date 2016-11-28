@@ -17,6 +17,7 @@ from functools import wraps
 import json
 import signal
 import subprocess
+import sys
 import time
 import traceback
 
@@ -168,8 +169,8 @@ class Base(object):
 
             ("foobar\n", "")
 
-            (None, None) if the command couldn't be executed or returned a
-            non-zero status code
+            None if the command couldn't be executed or returned a non-zero
+            status code
         """
         start_time = time.time()
         try:
@@ -185,14 +186,14 @@ class Base(object):
         except Exception as e:
             self.logger.error("Cannot execute command '%s': %s : %s" %
                               (cmd, str(e), traceback.format_exc()))
-            return (None, None)
+            return None
 
         returncode = proc.returncode
 
         if returncode != 0:
             self.logger.error("Command '%s' failed (return code %d): %s" %
                               (cmd, returncode, stderr))
-            return (None, None)
+            return None
         if self.debug:
             elapsedtime = time.time() - start_time
             self.logger.info("Command '%s' returned %s in %0.3fs" %
@@ -221,16 +222,18 @@ class Base(object):
 
     @staticmethod
     def restore_sigchld():
-        """Restores the SIGCHLD handler.
+        """Restores the SIGCHLD handler for Python <= v2.6.
 
         This should be provided to collectd as the init callback by plugins
-        that execute external programs and want to check the return code.
+        that execute external programs.
 
         Note that it will BREAK the exec plugin!!!
 
-        See contrib/python/getsigchld.py in the collectd project for details.
+        See https://github.com/deniszh/collectd-iostat-python/issues/2 for
+        details.
         """
-        signal.signal(signal.SIGCHLD, signal.SIG_DFL)
+        if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
+            signal.signal(signal.SIGCHLD, signal.SIG_DFL)
 
     def notification_callback(self, notification):
         if not self.depends_on_resource:

@@ -1,33 +1,30 @@
-{%- from "collectd/map.jinja" import client with context %}
-{%- from "collectd/map.jinja" import remote_client with context %}
-local_plugin:
+plugin:
   collectd_processes:
     plugin: processes
+    execution: local
     template: collectd/files/collectd_processes.conf
     process:
-  {%- if pillar.collectd.get('client', {}).get('enabled', False) %}
-      collectd:
-        match: '(collectd.*{{ client.config_file }}|collectd$)'
-  {%- endif %}
-  {%- if pillar.collectd.get('remote_client', {}).get('enabled', False) %}
-      remote_collectd:
-        match: 'collectd.*{{ remote_client.config_file }}'
-  {%- endif %}
-  {%- if pillar.collectd.get('client', {}).get('check', {}).curl is defined %}
+      collectdmon: {}
+  collectd_check_local_endpoint:
+    plugin: python
+    execution: local
+    template: collectd/files/collectd_check_local_endpoint.conf
+    endpoint: {}
+{%- if pillar.collectd.client.get('check', {}).curl is defined %}
   collectd_curl:
     plugin: curl
     execution: local
     template: collectd/files/collectd_curl.conf
     data: {{ pillar.collectd.client.check.curl|yaml }}
-  {%- endif %}
-  {%- if pillar.collectd.get('client', {}).get('check', {}).ping is defined %}
+{%- endif %}
+{%- if pillar.collectd.client.get('check', {}).ping is defined %}
   collectd_ping:
     plugin: ping
     execution: local
     template: collectd/files/collectd_ping.conf
     data: {{ pillar.collectd.client.check.ping|yaml }}
-  {%- endif %}
-  {%- if pillar.get('external', {}).network_device is defined %}
+{%- endif %}
+{%- if pillar.get('external', {}).network_device is defined %}
   collectd_network_device:
     plugin: snmp
     execution: local
@@ -48,9 +45,4 @@ local_plugin:
         - 1.3.6.1.2.1.31.1.1.1.7
         - 1.3.6.1.2.1.31.1.1.1.11
     host: {{ pillar.external.network_device|yaml }}
-  {%- endif %}
-  collectd_check_local_endpoint:
-    plugin: python
-    execution: remote
-    template: collectd/files/collectd_check_local_endpoint.conf
-    endpoint: {}
+{%- endif %}
