@@ -5,7 +5,9 @@
 {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
 {%- macro load_grains_file() %}{% include grains_fragment_file %}{% endmacro %}
 {%- set grains_yaml = load_grains_file()|load_yaml %}
+{%- if grains_yaml is mapping %}
 {%- do service_grains.collectd.local_plugin.update(grains_yaml.get('local_plugin', {})) %}
+{%- endif %}
 {%- endif %}
 {%- endfor %}
 doc:
@@ -21,4 +23,6 @@ doc:
           value: {{ backend.host }}:{{ backend.port }}
 {%- endfor %}
         plugins:
-          value: {% for plugin_name, plugin in service_grains.collectd.local_plugin.iteritems() %} {{ plugin_name }}{% endfor %}
+          value:
+            {% for plugin_name, plugin in service_grains.collectd.local_plugin.iteritems() %}
+            - {{ plugin_name }}{% endfor %}
