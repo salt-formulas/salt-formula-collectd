@@ -14,10 +14,10 @@
 # limitations under the License.
 
 import collectd
+from pyroute2 import IPRoute
+import socket
 
 import collectd_base as base
-
-from pyroute2 import IPRoute
 
 NAME = 'vrrp'
 
@@ -62,8 +62,10 @@ class VrrpPlugin(base.Base):
             self.logger.error("vrrp: Missing 'IPAddress' parameter")
 
     def itermetrics(self):
+        local_addresses = [i.get_attr('IFA_LOCAL') for i in
+                           self.ipr.get_addr(family=socket.AF_INET)]
         for ip_address in self.ip_addresses:
-            v = 1 if self.ipr.get_addr(address=ip_address['address']) else 0
+            v = 1 if ip_address['address'] in local_addresses else 0
             data = {'values': v, 'meta': {'ip_address': ip_address['address']}}
             if 'label' in ip_address:
                 data['meta']['label'] = ip_address['label']
