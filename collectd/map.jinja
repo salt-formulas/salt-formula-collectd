@@ -3,6 +3,7 @@
     'Arch': {
         'pkgs': ['collectd'],
         'service': 'collectd',
+        'defaults_file': '/etc/default/collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
         'read_interval': 60,
@@ -14,6 +15,7 @@
     'Debian': {
         'pkgs': ['collectd-core', 'snmp', 'python-yaml', 'libpython2.7', 'python-simplejson'],
         'service': 'collectd',
+        'defaults_file': '/etc/default/collectd',
         'config_file': '/etc/collectd/collectd.conf',
         'config_dir': '/etc/collectd/conf.d',
         'read_interval': 60,
@@ -25,6 +27,7 @@
     'RedHat': {
         'pkgs': ['collectd', 'collectd-ping', 'net-snmp', 'PyYAML'],
         'service': 'collectd',
+        'defaults_file': '/etc/sysconfig/collectd',
         'config_file': '/etc/collectd.conf',
         'config_dir': '/etc/collectd.d',
         'read_interval': 60,
@@ -38,6 +41,7 @@
 {% set remote_client = salt['grains.filter_by']({
     'default': {
         'service': 'remote_collectd',
+        'defaults_file': '/etc/default/remote_collectd',
         'config_file': '/etc/remote_collectd/collectd.conf',
         'config_dir': '/etc/remote_collectd/conf.d',
         'read_interval': 60,
