@@ -53,6 +53,16 @@
   - require_in:
     - file: {{ client.service }}_client_conf_dir_clean
 
+/etc/logrotate.d/{{ client.service }}:
+  file.managed:
+  - source: salt://collectd/files/collectd_logrotate.conf
+  - template: jinja
+  - defaults:
+    service_name: {{ client.service }}
+  - user: root
+  - group: root
+  - mode: 644
+
 {%- endif %}
 
 {{ client.config_dir }}/collectd_python.conf:
