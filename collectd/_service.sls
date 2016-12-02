@@ -129,6 +129,13 @@
 
 {%- endif %}
 
+{{ client.defaults_file }}:
+  file.managed:
+  - source: salt://collectd/files/default_collectd
+  - template: jinja
+  - user: root
+  - group: root
+  - mode: 644
 
 {{ client.service }}_service:
 {%- if client.automatic_starting %}
@@ -137,6 +144,7 @@
   - watch:
     - file: {{ client.config_file }}
     - file: {{ client.config_dir }}/*
+    - file: {{ client.defaults_file }}
 {%- else %}
   service.disabled:
 {%- endif %}
