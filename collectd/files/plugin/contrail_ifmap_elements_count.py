@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 plugin_name = "contrail"
-plugin_instance = "ifmap-elements-count"
+plugin_instance = "ifmap_elements_count"
 plugin_interval = 90
 plugin_type = 'gauge'
 
@@ -57,7 +57,6 @@ def payload_callback():
         plugin=plugin_name,  # metric source
         plugin_instance=plugin_instance,
         type=plugin_type,
-        type_instance=plugin_name,
         interval=plugin_interval,
         meta={'0': True},
         values=[value]
