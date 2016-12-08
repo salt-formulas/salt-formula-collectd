@@ -152,6 +152,7 @@
   service.running:
   - enable: true
   - watch:
+    - file: /usr/lib/collectd-python
     - file: {{ client.config_file }}
     - file: {{ client.config_dir }}/*
     - file: {{ client.defaults_file }}
