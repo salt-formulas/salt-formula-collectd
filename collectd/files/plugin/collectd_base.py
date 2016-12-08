@@ -151,7 +151,7 @@ class Base(object):
         )
         v.dispatch()
 
-    def execute(self, cmd, shell=True, cwd=None):
+    def execute(self, cmd, shell=True, cwd=None, log_error=True):
         """Executes a program with arguments.
 
         Args:
@@ -161,6 +161,8 @@ class Base(object):
             True).
             cwd: the directory to change to before running the program
             (default=None).
+            log_error: whether to log an error when the command returned a
+            non-zero status code (default=True).
 
         Returns:
             A tuple containing the standard output and error strings if the
@@ -168,8 +170,10 @@ class Base(object):
 
             ("foobar\n", "")
 
-            (None, None) if the command couldn't be executed or returned a
-            non-zero status code
+            (None, "stderr of the command") if the command returned a
+            non-zero status code.
+
+            (None, None) if the command couldn't be executed at all.
         """
         start_time = time.time()
         try:
@@ -190,9 +194,10 @@ class Base(object):
         returncode = proc.returncode
 
         if returncode != 0:
-            self.logger.error("Command '%s' failed (return code %d): %s" %
-                              (cmd, returncode, stderr))
-            return (None, None)
+            if log_error:
+                self.logger.error("Command '%s' failed (return code %d): %s" %
+                                  (cmd, returncode, stderr))
+            return (None, stderr)
         if self.debug:
             elapsedtime = time.time() - start_time
             self.logger.info("Command '%s' returned %s in %0.3fs" %

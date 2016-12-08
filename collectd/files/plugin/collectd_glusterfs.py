@@ -25,6 +25,8 @@ peer_re = re.compile(r'^Hostname: (?P<peer>.+)$', re.MULTILINE)
 state_re = re.compile(r'^State: (?P<state>.+)$', re.MULTILINE)
 
 vol_status_re = re.compile(r'\n\s*\n', re.MULTILINE)
+vol_status_transaction_in_progress_re = re.compile(
+    r'Another transaction.*in progress\.')
 vol_block_re = re.compile(r'^-+', re.MULTILINE)
 volume_re = re.compile(r'^Status of volume:\s+(?P<volume>.+)', re.MULTILINE)
 brick_server_re = re.compile(r'^Brick\s*:\s*Brick\s*(?P<peer>[^:]+)',
@@ -104,103 +106,112 @@ class GlusterfsPlugin(base.Base):
             }
 
         # Collect volumes' metrics
-        out, err = self.execute(
-            [GLUSTER_BINARY, 'volume', 'status', 'all', 'detail'],
-            shell=False)
+        cmd = [GLUSTER_BINARY, 'volume', 'status', 'all', 'detail']
+        out, err = self.execute(cmd, shell=False, log_error=False)
         if not out:
-            raise base.CheckException("Failed to execute 'gluster volume'")
-
-        for vol_block in vol_status_re.split(out):
-            volume_m = volume_re.search(vol_block)
-            if not volume_m:
-                continue
-            volume = volume_m.group('volume')
-            for line in vol_block_re.split(vol_block):
-                peer_m = brick_server_re.search(line)
-                if not peer_m:
+            if err and vol_status_transaction_in_progress_re.match(err):
+                # "transaction already in progress" error, we assume volumes
+                # metrics are being collected on another glusterfs node, and
+                # just silently skip the collecting of the volume metrics
+                # this time
+                self.logger.info("Command '%s' failed because of a "
+                                 "transaction is already in progress, "
+                                 "ignore the error" % cmd)
+            else:
+                self.logger.error("Command '%s' failed: %s" % (cmd, err))
+                raise base.CheckException("Failed to execute 'gluster volume'")
+        else:
+            for vol_block in vol_status_re.split(out):
+                volume_m = volume_re.search(vol_block)
+                if not volume_m:
                     continue
                 volume = volume_m.group('volume')
-                peer = peer_m.group('peer')
-                disk_free_m = disk_free_re.search(line)
-                disk_total_m = disk_total_re.search(line)
-                inode_free_m = inode_free_re.search(line)
-                inode_count_m = inode_count_re.search(line)
-                if disk_free_m and disk_total_m:
-                    free = convert_to_bytes(
-                        disk_free_m.group('disk_free'),
-                        disk_free_m.group('unit'))
-                    total = convert_to_bytes(
-                        disk_total_m.group('disk_total'),
-                        disk_total_m.group('unit'))
-                    used = total - free
-                    yield {
-                        'type_instance': 'space_free',
-                        'values': free,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                for line in vol_block_re.split(vol_block):
+                    peer_m = brick_server_re.search(line)
+                    if not peer_m:
+                        continue
+                    volume = volume_m.group('volume')
+                    peer = peer_m.group('peer')
+                    disk_free_m = disk_free_re.search(line)
+                    disk_total_m = disk_total_re.search(line)
+                    inode_free_m = inode_free_re.search(line)
+                    inode_count_m = inode_count_re.search(line)
+                    if disk_free_m and disk_total_m:
+                        free = convert_to_bytes(
+                            disk_free_m.group('disk_free'),
+                            disk_free_m.group('unit'))
+                        total = convert_to_bytes(
+                            disk_total_m.group('disk_total'),
+                            disk_total_m.group('unit'))
+                        used = total - free
+                        yield {
+                            'type_instance': 'space_free',
+                            'values': free,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                    yield {
-                        'type_instance': 'space_percent_free',
-                        'values': free * 100.0 / total,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                        yield {
+                            'type_instance': 'space_percent_free',
+                            'values': free * 100.0 / total,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                    yield {
-                        'type_instance': 'space_used',
-                        'values': used,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                        yield {
+                            'type_instance': 'space_used',
+                            'values': used,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                    yield {
-                        'type_instance': 'space_percent_used',
-                        'values': used * 100.0 / total,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                        yield {
+                            'type_instance': 'space_percent_used',
+                            'values': used * 100.0 / total,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                if inode_free_m and inode_count_m:
-                    free = int(inode_free_m.group('inode_free'))
-                    total = int(inode_count_m.group('inode_count'))
-                    used = total - free
-                    yield {
-                        'type_instance': 'inodes_free',
-                        'values': free,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                    if inode_free_m and inode_count_m:
+                        free = int(inode_free_m.group('inode_free'))
+                        total = int(inode_count_m.group('inode_count'))
+                        used = total - free
+                        yield {
+                            'type_instance': 'inodes_free',
+                            'values': free,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                    yield {
-                        'type_instance': 'inodes_percent_free',
-                        'values': free * 100.0 / total,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                        yield {
+                            'type_instance': 'inodes_percent_free',
+                            'values': free * 100.0 / total,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                    yield {
-                        'type_instance': 'inodes_used',
-                        'values': used,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                        yield {
+                            'type_instance': 'inodes_used',
+                            'values': used,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
-                    yield {
-                        'type_instance': 'inodes_percent_used',
-                        'values': used * 100.0 / total,
-                        'meta': {
-                            'volume': volume,
-                            'peer': peer,
+                        yield {
+                            'type_instance': 'inodes_percent_used',
+                            'values': used * 100.0 / total,
+                            'meta': {
+                                'volume': volume,
+                                'peer': peer,
+                            }
                         }
-                    }
 
 
 plugin = GlusterfsPlugin(collectd)
@@ -216,6 +227,7 @@ def config_callback(conf):
 
 def read_callback():
     plugin.read_callback()
+
 
 collectd.register_init(init_callback)
 collectd.register_config(config_callback)
