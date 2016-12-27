@@ -68,25 +68,24 @@ class APICheckPlugin(openstack.CollectdPlugin):
             if name not in self.CHECK_MAP:
                 self.logger.notice(
                     "No check found for service '%s', skipping it" % name)
-                status = self.UNKNOWN
-                check = {}
+                continue
+
+            check = self.CHECK_MAP[name]
+            url = self._service_url(service['url'], check['path'])
+            r = self.raw_get(url, token_required=check.get('auth', False))
+
+            if r is None or r.status_code not in check['expect']:
+                def _status(ret):
+                    return 'N/A' if r is None else r.status_code
+
+                self.logger.notice(
+                    "Service %s check failed "
+                    "(returned '%s' but expected '%s')" % (
+                        name, _status(r), check['expect'])
+                )
+                status = self.FAIL
             else:
-                check = self.CHECK_MAP[name]
-                url = self._service_url(service['url'], check['path'])
-                r = self.raw_get(url, token_required=check.get('auth', False))
-
-                if r is None or r.status_code not in check['expect']:
-                    def _status(ret):
-                        return 'N/A' if r is None else r.status_code
-
-                    self.logger.notice(
-                        "Service %s check failed "
-                        "(returned '%s' but expected '%s')" % (
-                            name, _status(r), check['expect'])
-                    )
-                    status = self.FAIL
-                else:
-                    status = self.OK
+                status = self.OK
 
             yield {
                 'service': check.get('name', name),
