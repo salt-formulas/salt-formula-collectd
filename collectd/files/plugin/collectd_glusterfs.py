@@ -59,9 +59,9 @@ class GlusterfsPlugin(base.Base):
 
     def itermetrics(self):
         # Collect peers' metrics
-        out, err = self.execute([GLUSTER_BINARY, 'peer', 'status'],
-                                shell=False)
-        if not out:
+        retcode, out, err = self.execute([GLUSTER_BINARY, 'peer', 'status'],
+                                         shell=False)
+        if retcode != 0:
             raise base.CheckException("Failed to execute 'gluster peer'")
 
         total = 0
@@ -107,8 +107,8 @@ class GlusterfsPlugin(base.Base):
 
         # Collect volumes' metrics
         cmd = [GLUSTER_BINARY, 'volume', 'status', 'all', 'detail']
-        out, err = self.execute(cmd, shell=False, log_error=False)
-        if not out:
+        retcode, out, err = self.execute(cmd, shell=False, log_error=False)
+        if retcode != 0:
             if err and vol_status_transaction_in_progress_re.match(err):
                 # "transaction already in progress" error, we assume volumes
                 # metrics are being collected on another glusterfs node, and
