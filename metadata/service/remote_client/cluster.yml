@@ -8,5 +8,7 @@ parameters:
       enabled: true
       read_interval: 10
       read_threads: 10
+      write_queue_limit_high: 10000
+      write_queue_limit_low: 10000
       use_fqdn: false
       automatic_starting: false
