@@ -39,7 +39,8 @@ class ElasticsearchClusterHealthPlugin(base.ElasticsearchBase):
 
         yield {
             'type_instance': 'health',
-            'values': HEALTH_MAP[data['status']]
+            'values': HEALTH_MAP[data['status']],
+            'meta': {'discard_hostname': True}
         }
 
         for metric in METRICS:
@@ -51,10 +52,11 @@ class ElasticsearchClusterHealthPlugin(base.ElasticsearchBase):
                 continue
             yield {
                 'type_instance': metric,
-                'values': value
+                'values': value,
+                'meta': {'discard_hostname': True}
             }
 
-plugin = ElasticsearchClusterHealthPlugin(collectd)
+plugin = ElasticsearchClusterHealthPlugin(collectd, local_check=False)
 
 
 def config_callback(conf):
