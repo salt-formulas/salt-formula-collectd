@@ -1,6 +1,6 @@
-========
-Collectd
-========
+================
+Collectd formula
+================
 
 Collectd is a daemon which collects system performance statistics periodically and provides mechanisms to store the values in a variety of ways, for example in RRD files.
 
@@ -59,7 +59,6 @@ Send data over HTTP
 Data collectors
 ---------------
 
-
 Monitor network devices, defined in 'external' dictionary
 
 .. code-block:: yaml
@@ -104,7 +103,6 @@ Collecting the SNMP metrics
             data:
             - connected_devices
 
-
 Collecting the cURL response times and codes
 
 .. code-block:: yaml
@@ -117,7 +115,6 @@ Collecting the cURL response times and codes
               url: "https://service.domain.com:443/"
             service2:
               url: "https://service.domain.com:443/"
-
 
 Collecting the ping response times
 
@@ -132,8 +129,8 @@ Collecting the ping response times
             host_label2:
               host: "172.10.31.12"
 
-Read more
-=========
+External links
+==============
 
 * http://collectd.org/documentation.shtml
 * http://www.canopsis.org/2013/02/collectd-graphite/
