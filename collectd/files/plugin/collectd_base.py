@@ -48,7 +48,7 @@ class Base(object):
 
     MAX_IDENTIFIER_LENGTH = 63
 
-    def __init__(self, collectd, service_name=None):
+    def __init__(self, collectd, service_name=None, local_check=True):
         self.debug = False
         self.timeout = 5
         self.max_retries = 3
@@ -61,6 +61,7 @@ class Base(object):
         self.do_collect_data = True
 
         self.service_name = service_name
+        self.local_check = local_check
 
     def config_callback(self, conf):
         for node in conf.children:
@@ -95,7 +96,8 @@ class Base(object):
 
     def dispatch_check_metric(self, check, failure=None):
         metric = {
-            'meta': {'service_check': self.service_name or self.plugin},
+            'meta': {'service_check': self.service_name or self.plugin,
+                     'local_check': self.local_check},
             'values': check,
         }
 
