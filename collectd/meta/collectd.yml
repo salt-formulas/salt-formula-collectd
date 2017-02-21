@@ -53,3 +53,7 @@ local_plugin:
     plugin: python
     template: collectd/files/collectd_check_local_endpoint.conf
     endpoint: {}
+  collectd_http_check:
+    plugin: python
+    template: collectd/files/collectd_http_check.conf
+    url: {}
