@@ -71,7 +71,8 @@ class HTTPCheckPlugin(base.Base):
                         "Got response from {}: '{}'".format(url, r.text))
                     yield {'type_instance': name, 'values': self.OK}
 
-plugin = HTTPCheckPlugin(collectd)
+
+plugin = HTTPCheckPlugin(collectd, disable_check_metric=True)
 
 
 def config_callback(conf):
