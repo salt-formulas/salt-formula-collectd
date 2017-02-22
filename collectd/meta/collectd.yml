@@ -51,6 +51,9 @@ local_plugin:
   {%- endif %}
   collectd_check_local_endpoint:
     plugin: python
-    execution: remote
     template: collectd/files/collectd_check_local_endpoint.conf
     endpoint: {}
+  collectd_http_check:
+    plugin: python
+    template: collectd/files/collectd_http_check.conf
+    url: {}
