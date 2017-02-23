@@ -33,6 +33,10 @@ class KeystoneException(Exception):
     pass
 
 
+class PluginConfigurationException(Exception):
+    pass
+
+
 class OSClient(object):
     """ Base class for querying the OpenStack API endpoints.
 
@@ -161,6 +165,10 @@ class CollectdPlugin(base.Base):
         # 200 nodes environments with 600 VMs. See #1554502 for details.
         self.timeout = 20
         self.max_retries = 2
+        self.username = None
+        self.password = None
+        self.tenant_name = None
+        self.keystone_url = None
         self.os_client = None
         self.extra_config = {}
         self._threads = {}
@@ -272,21 +280,30 @@ class CollectdPlugin(base.Base):
         super(CollectdPlugin, self).config_callback(config)
         for node in config.children:
             if node.key == 'Username':
-                username = node.values[0]
+                self.username = node.values[0]
             elif node.key == 'Password':
-                password = node.values[0]
+                self.password = node.values[0]
             elif node.key == 'Tenant':
-                tenant_name = node.values[0]
+                self.tenant_name = node.values[0]
             elif node.key == 'KeystoneUrl':
-                keystone_url = node.values[0]
+                self.keystone_url = node.values[0]
             elif node.key == 'PaginationLimit':
                 self.pagination_limit = int(node.values[0])
             elif node.key == 'PollingInterval':
                 self.polling_interval = int(node.values[0])
 
-        self.os_client = OSClient(username, password, tenant_name,
-                                  keystone_url, self.timeout, self.logger,
-                                  self.max_retries)
+        if self.username is None:
+            raise PluginConfigurationException('Username parameter is missing')
+        if self.password is None:
+            raise PluginConfigurationException('Password parameter is missing')
+        if self.tenant_name is None:
+            raise PluginConfigurationException('Tenant parameter is missing')
+        if self.keystone_url is None:
+            raise PluginConfigurationException('KeystoneUrl parameter is missing')
+
+        self.os_client = OSClient(self.username, self.password,
+                                  self.tenant_name, self.keystone_url,
+                                  self.timeout, self.logger, self.max_retries)
 
     def get_objects(self, project, object_name, api_version='',
                     params=None, detail=False, since=False):
@@ -405,3 +422,10 @@ class CollectdPlugin(base.Base):
                 # Ignore when count_func() doesn't return a number
                 pass
         return counts
+
+    def shutdown_callback(self):
+        for tid, t in self._threads.items():
+            if t.is_alive():
+                self.logger.info('Waiting for {} thread to finish'.format(tid))
+                t.stop()
+                t.join()

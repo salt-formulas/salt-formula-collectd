@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import namedtuple
 import logging
 import os
 
@@ -20,7 +21,10 @@ import os
 log_level = logging.INFO
 if os.getenv('COLLECTD_DEBUG', '') == '1':
     log_level = logging.DEBUG
-logging.basicConfig(level=log_level)
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s [%(threadName)s] %(levelname)s: %(message)s'
+)
 
 
 class Values(object):
@@ -41,8 +45,8 @@ class Values(object):
     def dispatch(self, type=None, values=None, plugin_instance=None,
                  type_instance=None, plugin=None, host=None, time=None,
                  meta=None, interval=None):
-        info("plugin={plugin} plugin_instance={plugin_instance} " \
-             "type={type} type_instance={type_instance} " \
+        info("dispatch: plugin={plugin} plugin_instance={plugin_instance} "
+             "type={type} type_instance={type_instance} "
              "values={values} meta={meta}".format(
                  plugin=plugin or self._plugin,
                  plugin_instance=plugin_instance or self._plugin_instance,
@@ -51,6 +55,18 @@ class Values(object):
                  values=values or self._values,
                  meta=meta or self._meta,
              ))
+
+
+def load_configuration(plugin):
+    collectd_vars = {
+        e: os.environ[e]
+        for e in os.environ.keys() if e.startswith('COLLECTD_')}
+    for varname, value in collectd_vars.iteritems():
+        debug("configuration: {}={}".format(varname, value))
+        setattr(plugin, varname[9:].lower(), value)
+
+    FakeConfig = namedtuple('FakeConfig', ['children'])
+    plugin.config_callback(FakeConfig(children=[]))
 
 
 def error(msg):
@@ -62,11 +78,11 @@ def warning(msg):
 
 
 def notice(msg):
-    logging.notice(msg)
+    logging.info(msg)
 
 
 def info(msg):
-    logging.error(msg)
+    logging.info(msg)
 
 
 def debug(msg):
