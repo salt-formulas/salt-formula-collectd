@@ -1,7 +1,22 @@
 check:
+{%- if pillar.collectd.get('remote_client', {}).get('enabled', False) %}
+  local_collectd_remote_client_proc1:
+    command: "PATH=$PATH:/usr/lib64/nagios/plugins:/usr/lib/nagios/plugins check_procs -C collectd -u root -c 1:2"
+    interval: 60
+    occurrences: 1
+    subscribers:
+    - local-collectd-remote_client
+  local_collectd_remote_client_proc2:
+    command: "PATH=$PATH:/usr/lib64/nagios/plugins:/usr/lib/nagios/plugins check_procs -C collectd -a /etc/remote_collectd/collectd.conf -u root -c 0:1"
+    interval: 60
+    occurrences: 1
+    subscribers:
+    - local-collectd-remote_client
+{%- else %}
   local_collectd_proc:
     command: "PATH=$PATH:/usr/lib64/nagios/plugins:/usr/lib/nagios/plugins check_procs -C collectd -u root -c 1:1"
     interval: 60
     occurrences: 1
     subscribers:
     - local-collectd-client
+{%- endif %}
