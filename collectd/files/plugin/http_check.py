@@ -40,6 +40,7 @@ class HTTPCheckPlugin(base.Base):
         )
         self.urls = {}
         self.expected_codes = {}
+        self.expected_contents = {}
 
     def config_callback(self, config):
         super(HTTPCheckPlugin, self).config_callback(config)
@@ -48,6 +49,8 @@ class HTTPCheckPlugin(base.Base):
                 self.urls[node.values[0]] = node.values[1]
             elif node.key == 'ExpectedCode':
                 self.expected_codes[node.values[0]] = int(node.values[1])
+            elif node.key == 'ExpectedContent':
+                self.expected_contents[node.values[0]] = node.values[1]
 
     def itermetrics(self):
         for name, url in self.urls.items():
@@ -57,7 +60,7 @@ class HTTPCheckPlugin(base.Base):
                 self.logger.warning("Got exception for '{}': {}".format(
                     url, e)
                 )
-                yield {'type_instance': name, 'values': self.FAIL}
+                status = self.FAIL
             else:
 
                 expected_code = self.expected_codes.get(name, 200)
@@ -67,11 +70,21 @@ class HTTPCheckPlugin(base.Base):
                          "while {} is expected").format(name, url,
                                                         r.status_code,
                                                         expected_code))
-                    yield {'type_instance': name, 'values': self.FAIL}
+                    status = self.FAIL
                 else:
                     self.logger.debug(
                         "Got response from {}: '{}'".format(url, r.content))
-                    yield {'type_instance': name, 'values': self.OK}
+                    status = self.OK
+                    expected_content = self.expected_contents.get(name)
+                    if expected_content:
+                        if r.content != expected_content:
+                            status = self.FAIL
+                            self.logger.warning(
+                                'Content "{}" does not match "{}"'.format(
+                                    r.content[0:30], expected_content
+                                ))
+
+            yield {'type_instance': name, 'values': status }
 
 
 plugin = HTTPCheckPlugin(collectd, disable_check_metric=True)
