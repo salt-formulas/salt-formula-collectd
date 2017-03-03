@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-try:
-    import collectd
-except ImportError:
+if __name__ == '__main__':
     import collectd_fake as collectd
-
-import requests
+else:
+    import collectd
 
 import collectd_base as base
-
+import requests
 
 NAME = 'http_check'
 
@@ -79,6 +77,18 @@ class HTTPCheckPlugin(base.Base):
 plugin = HTTPCheckPlugin(collectd, disable_check_metric=True)
 
 
+def config_callback(conf):
+    plugin.config_callback(conf)
+
+
+def notification_callback(notification):
+    plugin.notification_callback(notification)
+
+
+def read_callback():
+    plugin.conditional_read_callback()
+
+
 if __name__ == '__main__':
     plugin.urls['google_ok'] = 'https://www.google.com'
     plugin.urls['google_fail'] = 'https://www.google.com/not_found'
@@ -86,17 +96,6 @@ if __name__ == '__main__':
     plugin.expected_codes['github_fail'] = 200
     plugin.read_callback()
 else:
-    def config_callback(conf):
-        plugin.config_callback(conf)
-
-
-    def notification_callback(notification):
-        plugin.notification_callback(notification)
-
-
-    def read_callback():
-        plugin.conditional_read_callback()
-
     collectd.register_config(config_callback)
     collectd.register_notification(notification_callback)
     collectd.register_read(read_callback, base.INTERVAL)

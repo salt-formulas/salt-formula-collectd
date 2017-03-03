@@ -16,7 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collectd
+if __name__ == '__main__':
+    import collectd_fake as collectd
+else:
+    import collectd
 
 import collectd_base as base
 import requests
@@ -129,5 +132,9 @@ def config_callback(conf):
 def read_callback():
     plugin.read_callback()
 
-collectd.register_config(config_callback)
-collectd.register_read(read_callback)
+if __name__ == '__main__':
+    collectd.load_configuration(plugin)
+    plugin.read_callback()
+else:
+    collectd.register_config(config_callback)
+    collectd.register_read(read_callback)

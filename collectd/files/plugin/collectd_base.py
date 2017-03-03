@@ -102,6 +102,7 @@ class Base(object):
 
     def dispatch_check_metric(self, value, failure=None):
         """Send a check metric reporting whether or not the plugin succeeded
+
         """
         if self.disable_check_metric:
             return
@@ -268,6 +269,8 @@ class Base(object):
                                    (self.__class__.__name__, do_collect_data))
             self.do_collect_data = do_collect_data
 
+    def shutdown_callback(self):
+        pass
 
 class CephBase(Base):
 
@@ -305,20 +308,22 @@ class AsyncPoller(threading.Thread):
         self.interval = interval
         self._results = []
         self._reset_on_read = reset_on_read
+        self._stop_flag = threading.Event()
 
     def run(self):
         self.collectd.info('Starting thread {}'.format(self.name))
-        while True:
+        while self.should_run:
             try:
                 started_at = time.time()
 
                 self.results = self.polling_function()
                 tosleep = self.interval - (time.time() - started_at)
                 if tosleep > 0:
+                    self.collectd.debug('Sleeping for {}s'.format(tosleep))
                     time.sleep(tosleep)
                 else:
                     self.collectd.warning(
-                        'Polling took more than {}s for {}'.format(
+                        'Polling task lasted longer than {}s for {}'.format(
                             self.interval, self.name
                         )
                     )
@@ -341,3 +346,10 @@ class AsyncPoller(threading.Thread):
             self._results.extend(value)
         else:
             self._results = value
+
+    def stop(self):
+        self._stop_flag.set()
+
+    @property
+    def should_run(self):
+        return not self._stop_flag.isSet()
