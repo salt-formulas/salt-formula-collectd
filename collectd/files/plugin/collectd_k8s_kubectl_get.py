@@ -94,6 +94,12 @@ class K8sPlugin(base.Base):
                 if self._check_conditions(conditions, _type='Ready'):
                     total_ready += 1
                 total += 1
+            if total > 0:
+                yield {'values': (100.0 * (total - total_ready)) / total,
+                       'plugin_instance': 'nodes_percent',
+                       'meta': {'status': 'not_ready'},
+                       }
+
             yield {'values': total_ready,
                    'plugin_instance': 'nodes',
                    'meta': {'status': 'ready'},
