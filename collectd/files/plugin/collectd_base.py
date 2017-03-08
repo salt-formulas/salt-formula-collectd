@@ -139,7 +139,7 @@ class Base(object):
                 'meta':   {'tagA': 'valA'}}
             {'type': 'dropped_bytes', 'values': [1,2]}
         """
-        raise NotImplemented("Must be implemented by the subclass!")
+        raise NotImplementedError("Must be implemented by the subclass!")
 
     def dispatch_metric(self, metric):
         values = metric['values']
