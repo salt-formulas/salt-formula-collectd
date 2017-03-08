@@ -21,7 +21,7 @@ else:
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'cinder'
+PLUGIN_NAME = 'openstack_cinder'
 INTERVAL = openstack.INTERVAL
 
 
@@ -55,18 +55,18 @@ class CinderStatsPlugin(openstack.CollectdPlugin):
         for s, nb in status.iteritems():
             yield {
                 'plugin_instance': 'volumes',
-                'type_instance': s,
-                'values': nb
+                'values': nb,
+                'meta': {'state': s, 'discard_hostname': True}
             }
 
         sizes = self.count_objects_group_by(volumes_details,
                                             group_by_func=groupby,
                                             count_func=count_size_bytes)
-        for n, size in sizes.iteritems():
+        for s, size in sizes.iteritems():
             yield {
                 'plugin_instance': 'volumes_size',
-                'type_instance': n,
-                'values': size
+                'values': size,
+                'meta': {'state': s, 'discard_hostname': True}
             }
 
         snaps_details = self.get_objects('cinderv2', 'snapshots',
@@ -76,8 +76,8 @@ class CinderStatsPlugin(openstack.CollectdPlugin):
         for s, nb in status_snaps.iteritems():
             yield {
                 'plugin_instance': 'snapshots',
-                'type_instance': s,
-                'values': nb
+                'values': nb,
+                'meta': {'state': s, 'discard_hostname': True}
             }
 
         sizes = self.count_objects_group_by(snaps_details,
@@ -86,8 +86,8 @@ class CinderStatsPlugin(openstack.CollectdPlugin):
         for n, size in sizes.iteritems():
             yield {
                 'plugin_instance': 'snapshots_size',
-                'type_instance': n,
-                'values': size
+                'values': size,
+                'meta': {'state': s, 'discard_hostname': True}
             }
 
 

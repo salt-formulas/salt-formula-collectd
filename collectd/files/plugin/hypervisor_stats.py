@@ -21,7 +21,7 @@ else:
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'hypervisor_stats'
+PLUGIN_NAME = 'openstack_nova'
 INTERVAL = openstack.INTERVAL
 
 
@@ -30,11 +30,17 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
     VALUE_MAP = {
         'current_workload': 'running_tasks',
         'running_vms': 'running_instances',
-        'local_gb_used': 'used_disk_GB',
-        'free_disk_gb': 'free_disk_GB',
-        'memory_mb_used': 'used_ram_MB',
-        'free_ram_mb': 'free_ram_MB',
+        'local_gb_used': 'used_disk',
+        'free_disk_gb': 'free_disk',
+        'memory_mb_used': 'used_ram',
+        'free_ram_mb': 'free_ram',
         'vcpus_used': 'used_vcpus',
+    }
+    UNIT_MAP = {
+        'local_gb_used': 'GB',
+        'free_disk_gb': 'GB',
+        'memory_mb_used': 'MB',
+        'free_ram_mb': 'MB',
     }
 
     def __init__(self, *args, **kwargs):
@@ -50,6 +56,12 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
         if 'cpu_ratio' not in self.extra_config:
             self.logger.warning('CpuAllocationRatio parameter not set')
 
+    @classmethod
+    def initialize_metrics(self):
+        metrics = {v: 0 for v in self.VALUE_MAP.values()}
+        metrics['free_vcpus'] = 0
+        return metrics
+
     def itermetrics(self):
         nova_aggregates = {}
         r = self.get('nova', 'os-aggregates')
@@ -61,29 +73,28 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
                 nova_aggregates[agg['name']] = {
                     'id': agg['id'],
                     'hosts': [h.split('.')[0] for h in agg['hosts']],
-                    'metrics': {'free_vcpus': 0},
+                    'metrics': self.initialize_metrics()
                 }
-                nova_aggregates[agg['name']]['metrics'].update(
-                    {v: 0 for v in self.VALUE_MAP.values()}
-                )
 
         r = self.get('nova', 'os-hypervisors/detail')
         if not r:
             self.logger.warning("Could not get hypervisor statistics")
             return
 
-        total_stats = {v: 0 for v in self.VALUE_MAP.values()}
-        total_stats['free_vcpus'] = 0
+        total_stats = self.initialize_metrics()
         hypervisor_stats = r.json().get('hypervisors', [])
         for stats in hypervisor_stats:
             # remove domain name and keep only the hostname portion
             host = stats['hypervisor_hostname'].split('.')[0]
             for k, v in self.VALUE_MAP.iteritems():
                 m_val = stats.get(k, 0)
+                meta = {'hostname': host}
+                if k in self.UNIT_MAP:
+                    meta['unit'] = self.UNIT_MAP[k]
                 yield {
-                    'type_instance': v,
+                    'plugin_instance': v,
                     'values': m_val,
-                    'meta': {'host': host},
+                    'meta': meta
                 }
                 total_stats[v] += m_val
                 for agg in nova_aggregates.keys():
@@ -96,9 +107,9 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
                 free = (int(self.extra_config['cpu_ratio'] *
                         m_vcpus)) - m_vcpus_used
                 yield {
-                    'type_instance': 'free_vcpus',
+                    'plugin_instance': 'free_vcpus',
                     'values': free,
-                    'meta': {'host': host},
+                    'meta': {'hostname': host},
                 }
                 total_stats['free_vcpus'] += free
                 for agg in nova_aggregates.keys():
@@ -109,25 +120,22 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
                                 m_vcpus_used)
                         nova_aggregates[agg]['metrics']['free_vcpus'] += free
 
-        # Dispatch the aggregate metrics
+        # Dispatch metrics for every aggregate
         for agg in nova_aggregates.keys():
             agg_id = nova_aggregates[agg]['id']
             agg_total_free_ram = (
-                nova_aggregates[agg]['metrics']['free_ram_MB'] +
-                nova_aggregates[agg]['metrics']['used_ram_MB']
+                nova_aggregates[agg]['metrics']['free_ram'] +
+                nova_aggregates[agg]['metrics']['used_ram']
             )
-            # Only emit metric when value is > 0
-            # If this is not the case, (for instance when no host
-            # in aggregate), this requires the corresponding alarms to
-            # have a 'skip' no_data_policy, so as not to be triggered
+            # Only emit metric when the value is > 0 to avoid division by zero
             if agg_total_free_ram > 0:
                 nova_aggregates[agg]['metrics']['free_ram_percent'] = round(
-                    (100.0 * nova_aggregates[agg]['metrics']['free_ram_MB']) /
+                    (100.0 * nova_aggregates[agg]['metrics']['free_ram']) /
                     agg_total_free_ram,
                     2)
             for k, v in nova_aggregates[agg]['metrics'].iteritems():
                 yield {
-                    'type_instance': 'aggregate_{}'.format(k),
+                    'plugin_instance': 'aggregate_{}'.format(k),
                     'values': v,
                     'meta': {
                         'aggregate': agg,

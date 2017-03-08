@@ -24,7 +24,7 @@ import re
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'cinder'
+PLUGIN_NAME = 'openstack_cinder'
 INTERVAL = openstack.INTERVAL
 
 
@@ -55,9 +55,9 @@ class CinderServiceStatsPlugin(openstack.CollectdPlugin):
 
             aggregated_workers[service][state] += 1
             yield {
-                'plugin_instance': 'cinder_service',
+                'plugin_instance': 'service',
                 'values': self.states[state],
-                'meta': {'host': host, 'service': service, 'state': state},
+                'meta': {'hostname': host, 'service': service, 'state': state},
             }
 
         for service in aggregated_workers:
@@ -66,14 +66,16 @@ class CinderServiceStatsPlugin(openstack.CollectdPlugin):
             for state in self.states:
                 prct = (100.0 * aggregated_workers[service][state]) / totalw
                 yield {
-                    'plugin_instance': 'cinder_services_percent',
+                    'plugin_instance': 'services_percent',
                     'values': prct,
-                    'meta': {'state': state, 'service': service}
+                    'meta': {'state': state, 'service': service,
+                             'discard_hostname': True}
                 }
                 yield {
-                    'plugin_instance': 'cinder_services',
+                    'plugin_instance': 'services',
                     'values': aggregated_workers[service][state],
-                    'meta': {'state': state, 'service': service},
+                    'meta': {'state': state, 'service': service,
+                             'discard_hostname': True},
                 }
 
 

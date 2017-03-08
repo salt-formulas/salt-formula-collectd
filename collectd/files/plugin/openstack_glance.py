@@ -21,7 +21,7 @@ else:
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'glance'
+PLUGIN_NAME = 'openstack_glance'
 INTERVAL = openstack.INTERVAL
 
 
@@ -57,11 +57,12 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
         status = self.count_objects_group_by(images_details,
                                              group_by_func=groupby)
         for s, nb in status.iteritems():
-            (name, visibility, status) = s.split('.')
+            (name, visibility, state) = s.split('.')
             yield {
-                'type_instance': name,
+                'plugin_instance': name,
                 'values': nb,
-                'meta': {'visibility': visibility, 'status': status}
+                'meta': {'visibility': visibility, 'state': state,
+                         'discard_hostname': True}
             }
 
         # sizes
@@ -79,11 +80,12 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
                                             group_by_func=groupby_size,
                                             count_func=count_size_bytes)
         for s, nb in sizes.iteritems():
-            (name, visibility, status) = s.split('.')
+            (name, visibility, state) = s.split('.')
             yield {
-                'type_instance': name,
+                'plugin_instance': name,
                 'values': nb,
-                'meta': {'visibility': visibility, 'status': status},
+                'meta': {'visibility': visibility, 'state': state,
+                         'discard_hostname': True},
             }
 
 plugin = GlanceStatsPlugin(collectd, PLUGIN_NAME, disable_check_metric=True)

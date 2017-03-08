@@ -25,7 +25,7 @@ import re
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'nova'
+PLUGIN_NAME = 'openstack_nova'
 INTERVAL = openstack.INTERVAL
 
 
@@ -55,9 +55,9 @@ class NovaServiceStatsPlugin(openstack.CollectdPlugin):
 
             aggregated_workers[service][state] += 1
             yield {
-                'plugin_instance': 'nova_service',
+                'plugin_instance': 'service',
                 'values': self.states[state],
-                'meta': {'host': host, 'service': service, 'state': state}
+                'meta': {'hostname': host, 'service': service, 'state': state}
             }
 
         for service in set(aggregated_workers.keys()).union(
@@ -71,14 +71,16 @@ class NovaServiceStatsPlugin(openstack.CollectdPlugin):
                     prct = (100.0 * aggregated_workers[service][state]) / total
 
                 yield {
-                    'plugin_instance': 'nova_services_percent',
+                    'plugin_instance': 'services_percent',
                     'values': prct,
-                    'meta': {'state': state, 'service': service},
+                    'meta': {'state': state, 'service': service,
+                             'discard_hostname': True},
                 }
                 yield {
-                    'plugin_instance': 'nova_services',
+                    'plugin_instance': 'services',
                     'values': aggregated_workers[service][state],
-                    'meta': {'state': state, 'service': service},
+                    'meta': {'state': state, 'service': service,
+                             'discard_hostname': True},
                 }
 
 
