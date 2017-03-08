@@ -44,13 +44,14 @@ class OSClient(object):
     """
     EXPIRATION_TOKEN_DELTA = datetime.timedelta(0, 30)
 
-    def __init__(self, username, password, tenant, keystone_url, timeout,
-                 logger, max_retries):
+    def __init__(self, username, password, tenant, keystone_url, region,
+                 timeout, logger, max_retries):
         self.logger = logger
         self.username = username
         self.password = password
         self.tenant_name = tenant
         self.keystone_url = keystone_url
+        self.region = region
         self.service_catalog = []
         self.tenant_id = None
         self.timeout = timeout
@@ -108,6 +109,9 @@ class OSClient(object):
         self.service_catalog = []
         for item in data['access']['serviceCatalog']:
             endpoint = item['endpoints'][0]
+            if self.region and self.region != endpoint['region']:
+                continue
+
             self.service_catalog.append({
                 'name': item['name'],
                 'region': endpoint['region'],
@@ -169,6 +173,7 @@ class CollectdPlugin(base.Base):
         self.password = None
         self.tenant_name = None
         self.keystone_url = None
+        self.region = None
         self.os_client = None
         self.extra_config = {}
         self._threads = {}
@@ -287,6 +292,8 @@ class CollectdPlugin(base.Base):
                 self.tenant_name = node.values[0]
             elif node.key == 'KeystoneUrl':
                 self.keystone_url = node.values[0]
+            elif node.key == 'Region':
+                self.region = node.values[0]
             elif node.key == 'PaginationLimit':
                 self.pagination_limit = int(node.values[0])
             elif node.key == 'PollingInterval':
@@ -303,7 +310,8 @@ class CollectdPlugin(base.Base):
 
         self.os_client = OSClient(self.username, self.password,
                                   self.tenant_name, self.keystone_url,
-                                  self.timeout, self.logger, self.max_retries)
+                                  self.region, self.timeout, self.logger,
+                                  self.max_retries)
 
     def get_objects(self, project, object_name, api_version='',
                     params=None, detail=False, since=False):
