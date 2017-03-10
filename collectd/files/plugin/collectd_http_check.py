@@ -39,6 +39,7 @@ class HTTPCheckPlugin(base.Base):
         self.timeout = 3
         self.max_retries = 2
         self.metric_names = {}
+        self.discard_hostnames = {}
 
         self.interval = base.INTERVAL
         self.polling_interval = base.INTERVAL
@@ -60,6 +61,9 @@ class HTTPCheckPlugin(base.Base):
                 self.urls[node.values[0]] = node.values[1]
             elif node.key == 'MetricName':
                 self.metric_names[node.values[0]] = node.values[1]
+            elif node.key == 'DiscardHostname':
+                if node.values[1].lower() == 'true':
+                    self.discard_hostnames[node.values[0]] = True
             elif node.key == 'ExpectedCode':
                 self.expected_codes[node.values[0]] = int(node.values[1])
             elif node.key == 'ExpectedContent':
@@ -149,7 +153,11 @@ class HTTPCheckPlugin(base.Base):
         for name, url in self.urls.items():
             r = self.check_url(name, url)
             if r:
-                yield {'meta': {'service': name},
+                meta = {'service': name}
+                if self.discard_hostnames.get(name):
+                    meta['discard_hostname'] = True
+
+                yield {'meta': meta,
                        'values': r,
                        'plugin': self.metric_names.get(name),
                        }
