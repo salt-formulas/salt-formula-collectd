@@ -57,3 +57,9 @@ local_plugin:
     plugin: python
     template: collectd/files/collectd_http_check.conf
     url: {}
+
+remote_plugin:
+  collectd_http_check:
+    plugin: python
+    template: collectd/files/collectd_http_check.conf
+    url: {}
