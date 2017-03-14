@@ -32,6 +32,9 @@ class HTTPCheckPlugin(base.Base):
         self.urls = {}
         self.expected_codes = {}
         self.expected_contents = {}
+        self.verify = {}
+        self.client_keys = {}
+        self.client_certs = {}
 
         self.timeout = 3
         self.max_retries = 2
@@ -58,6 +61,15 @@ class HTTPCheckPlugin(base.Base):
                 self.expected_codes[node.values[0]] = int(node.values[1])
             elif node.key == 'ExpectedContent':
                 self.expected_contents[node.values[0]] = node.values[1]
+            elif node.key == 'Verify':
+                if node.values[1].lower() == 'false':
+                    self.verify[node.values[0]] = False
+                else:
+                    self.verify[node.values[0]] = node.values[1]
+            elif node.key == 'ClientCert':
+                self.client_certs[node.values[0]] = node.values[1]
+            elif node.key == 'ClientKey':
+                self.client_keys[node.values[0]] = node.values[1]
 
         for name, url in self.urls.items():
             session = requests.Session()
@@ -70,6 +82,13 @@ class HTTPCheckPlugin(base.Base):
                     'https://',
                     requests.adapters.HTTPAdapter(max_retries=self.max_retries)
                 )
+
+                session.verify = self.verify.get(name, True)
+                if self.client_certs.get(name) and self.client_keys.get(name):
+                    session.cert = (self.client_certs.get(name), self.client_keys.get(name))
+                elif self.client_certs.get(name):
+                    session.cert = self.client_certs.get(name)
+
             self.sessions[name] = session
 
     def check_url(self, name, url):
