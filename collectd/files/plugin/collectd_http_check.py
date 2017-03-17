@@ -38,6 +38,7 @@ class HTTPCheckPlugin(base.Base):
 
         self.timeout = 3
         self.max_retries = 2
+        self.metric_names = {}
 
         self.interval = base.INTERVAL
         self.polling_interval = base.INTERVAL
@@ -57,6 +58,8 @@ class HTTPCheckPlugin(base.Base):
         for node in config.children:
             if node.key == "Url":
                 self.urls[node.values[0]] = node.values[1]
+            elif node.key == 'MetricName':
+                self.metric_names[node.values[0]] = node.values[1]
             elif node.key == 'ExpectedCode':
                 self.expected_codes[node.values[0]] = int(node.values[1])
             elif node.key == 'ExpectedContent':
@@ -146,7 +149,10 @@ class HTTPCheckPlugin(base.Base):
         for name, url in self.urls.items():
             r = self.check_url(name, url)
             if r:
-                yield {'type_instance': name, 'values': r}
+                yield {'meta': {'service': name},
+                       'values': r,
+                       'plugin': self.metric_names.get(name),
+                       }
 
 
 plugin = HTTPCheckPlugin(collectd, disable_check_metric=True)
