@@ -18,7 +18,7 @@ import collectd_base as base
 import collectd_http_check as http_check
 
 
-NAME = 'check_local_endpoint'
+NAME = 'openstack_check_local_api'
 
 
 class CheckLocalEndpoint(http_check.HTTPCheckPlugin):
@@ -27,7 +27,7 @@ class CheckLocalEndpoint(http_check.HTTPCheckPlugin):
         super(CheckLocalEndpoint, self).__init__(*args, **kwargs)
         self.plugin = NAME
 
-plugin = CheckLocalEndpoint(collectd)
+plugin = CheckLocalEndpoint(collectd, disable_check_metric=True)
 
 
 def config_callback(conf):
