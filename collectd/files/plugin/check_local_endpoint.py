@@ -15,7 +15,7 @@
 
 import collectd
 import collectd_base as base
-import http_check
+import collectd_http_check as http_check
 
 
 NAME = 'check_local_endpoint'
