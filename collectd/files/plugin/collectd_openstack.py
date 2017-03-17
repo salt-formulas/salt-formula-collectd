@@ -209,7 +209,8 @@ class CollectdPlugin(base.Base):
         {
           'host': 'node.example.com',
           'service': 'nova-compute',
-          'state': 'up'
+          'state': 'up',
+          'zone': 'az1'
         }
 
         where 'state' can be 'up', 'down' or 'disabled'
@@ -245,11 +246,13 @@ class CollectdPlugin(base.Base):
                     data = {'host': val['host'], 'service': val['binary']}
 
                     if service == 'neutron':
+                        data['zone'] = val['availability_zone']
                         if not val['admin_state_up']:
                             data['state'] = 'disabled'
                         else:
                             data['state'] = 'up' if val['alive'] else 'down'
                     else:
+                        data['zone'] = val['zone']
                         if val['status'] == 'disabled':
                             data['state'] = 'disabled'
                         elif val['state'] == 'up' or val['state'] == 'down':

@@ -44,23 +44,27 @@ class NeutronAgentStatsPlugin(openstack.CollectdPlugin):
         self.interval = INTERVAL
 
     def itermetrics(self):
-
         # Get information of the state per agent
         # State can be up or down
         aggregated_agents = defaultdict(Counter)
 
         for agent in self.iter_workers('neutron'):
+            az = agent['zone']
             host = agent['host'].split('.')[0]
             service = self.agent_re.sub(
                 '', self.neutron_re.sub('', agent['service']))
             state = agent['state']
 
             aggregated_agents[service][state] += 1
+            meta = {'hostname': host, 'service': service, 'state': state}
+            if az:
+                # AZ field is only set for DHCP and L3 agents
+                meta['az'] = az
 
             yield {
                 'plugin_instance': 'agent',
                 'values': self.states[state],
-                'meta': {'hostname': host, 'service': service, 'state': state}
+                'meta': meta,
             }
 
         for service in aggregated_agents:
