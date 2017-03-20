@@ -22,6 +22,8 @@ import time
 import traceback
 
 
+TIMEOUT_BIN = '/usr/bin/timeout'
+
 INTERVAL = 10
 
 
@@ -167,7 +169,8 @@ class Base(object):
         )
         v.dispatch()
 
-    def execute(self, cmd, shell=True, cwd=None, log_error=True):
+    def execute(self, cmd, shell=True, cwd=None, log_error=True,
+                signal='TERM'):
         """Executes a program with arguments.
 
         Args:
@@ -179,6 +182,8 @@ class Base(object):
             (default=None).
             log_error: whether to log an error when the command returned a
             non-zero status code (default=True).
+            signal: the signal used to kill the command if the timeout occurs
+            (default TERM).
 
         Returns:
             A tuple containing the return code, the standard output and the
@@ -189,9 +194,12 @@ class Base(object):
             (-1, None, None) if the program couldn't be executed at all.
         """
         start_time = time.time()
+        full_cmd = [TIMEOUT_BIN, '-k', '1', '-s', signal, str(self.timeout)]
+        full_cmd.extend(cmd)
+
         try:
             proc = subprocess.Popen(
-                cmd,
+                full_cmd,
                 cwd=cwd,
                 shell=shell,
                 stdout=subprocess.PIPE,
@@ -201,18 +209,30 @@ class Base(object):
             stdout = stdout.rstrip('\n')
         except Exception as e:
             self.logger.error("Cannot execute command '%s': %s : %s" %
-                              (cmd, str(e), traceback.format_exc()))
+                              (full_cmd, str(e), traceback.format_exc()))
             return (-1, None, None)
 
         returncode = proc.returncode
 
-        if returncode != 0 and log_error:
-            self.logger.error("Command '%s' failed (return code %d): %s" %
-                              (cmd, returncode, stderr))
+        if returncode != 0:
+            # timeout command returns usually 124 (TERM) or 137 (KILL) when the
+            # timeout occurs.
+            # But for some reason, python subprocess rewrites the return
+            # code with the (negative) signal sent when the the signal is not
+            # catched by the process.
+            if returncode == 124 or returncode < 0:
+                stderr = 'timeout {}s'.format(self.timeout)
+                msg = "Command '{}' timeout {}s".format(cmd, self.timeout)
+            else:
+                msg = "Command '{}' failed (return code {}): {}".format(
+                    cmd, returncode, stderr)
+
+            if log_error:
+                self.logger.error(msg)
         if self.debug:
             elapsedtime = time.time() - start_time
             self.logger.info("Command '%s' returned %s in %0.3fs" %
-                             (cmd, returncode, elapsedtime))
+                             (full_cmd, returncode, elapsedtime))
 
         return (returncode, stdout, stderr)
 
@@ -272,6 +292,7 @@ class Base(object):
 
     def shutdown_callback(self):
         pass
+
 
 class CephBase(Base):
 
