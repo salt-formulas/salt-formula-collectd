@@ -21,7 +21,7 @@ else:
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'keystone'
+PLUGIN_NAME = 'openstack_keystone'
 INTERVAL = openstack.INTERVAL
 
 
@@ -52,9 +52,9 @@ class KeystoneStatsPlugin(openstack.CollectdPlugin):
                                              group_by_func=groupby)
         for s, nb in status.iteritems():
             yield {
-                'type_instance': 'tenants',
+                'plugin_instance': 'tenants',
                 'values': nb,
-                'meta': {'state': s},
+                'meta': {'state': s, 'discard_hostname': True},
             }
 
         # users
@@ -67,9 +67,9 @@ class KeystoneStatsPlugin(openstack.CollectdPlugin):
                                              group_by_func=groupby)
         for s, nb in status.iteritems():
             yield {
-                'type_instance': 'users',
+                'plugin_instance': 'users',
                 'values': nb,
-                'meta': {'state': s},
+                'meta': {'state': s, 'discard_hostname': True},
             }
 
         # roles
@@ -79,8 +79,9 @@ class KeystoneStatsPlugin(openstack.CollectdPlugin):
             return
         roles = r.json().get('roles', [])
         yield {
-            'type_instance': 'roles',
+            'plugin_instance': 'roles',
             'values': len(roles),
+            'meta': {'discard_hostname': True},
         }
 
 plugin = KeystoneStatsPlugin(collectd, PLUGIN_NAME,

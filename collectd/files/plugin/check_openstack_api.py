@@ -20,7 +20,7 @@ import collectd_openstack as openstack
 
 from urlparse import urlparse
 
-PLUGIN_NAME = 'check_openstack_api'
+PLUGIN_NAME = 'openstack_check_api'
 INTERVAL = openstack.INTERVAL
 
 
@@ -104,13 +104,16 @@ class APICheckPlugin(openstack.CollectdPlugin):
             if item['status'] != self.UNKNOWN:
                 # skip if status is UNKNOWN
                 yield {
-                    'plugin_instance': item['service'],
                     'values': item['status'],
-                    'meta': {'region': item['region']},
+                    'meta': {
+                        'region': item['region'],
+                        'service': item['service'],
+                        'discard_hostname': True,
+                    },
                 }
 
 
-plugin = APICheckPlugin(collectd, PLUGIN_NAME)
+plugin = APICheckPlugin(collectd, PLUGIN_NAME, disable_check_metric=True)
 
 
 def config_callback(conf):

@@ -24,7 +24,7 @@ import re
 
 import collectd_openstack as openstack
 
-PLUGIN_NAME = 'neutron'
+PLUGIN_NAME = 'openstack_neutron'
 INTERVAL = openstack.INTERVAL
 
 
@@ -58,9 +58,9 @@ class NeutronAgentStatsPlugin(openstack.CollectdPlugin):
             aggregated_agents[service][state] += 1
 
             yield {
-                'type_instance': 'neutron_agent',
+                'plugin_instance': 'agent',
                 'values': self.states[state],
-                'meta': {'host': host, 'service': service, 'state': state}
+                'meta': {'hostname': host, 'service': service, 'state': state}
             }
 
         for service in aggregated_agents:
@@ -69,14 +69,16 @@ class NeutronAgentStatsPlugin(openstack.CollectdPlugin):
             for state in self.states:
                 prct = (100.0 * aggregated_agents[service][state]) / totala
                 yield {
-                    'type_instance': 'neutron_agents_percent',
+                    'plugin_instance': 'agents_percent',
                     'values': prct,
-                    'meta': {'service': service, 'state': state},
+                    'meta': {'service': service, 'state': state,
+                             'discard_hostname': True},
                 }
                 yield {
-                    'type_instance': 'neutron_agents',
+                    'plugin_instance': 'agents',
                     'values': aggregated_agents[service][state],
-                    'meta': {'service': service, 'state': state},
+                    'meta': {'service': service, 'state': state,
+                             'discard_hostname': True},
                 }
 
 

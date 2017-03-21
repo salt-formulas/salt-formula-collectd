@@ -23,7 +23,7 @@ import collectd_openstack as openstack
 from itertools import groupby
 
 
-PLUGIN_NAME = 'nova'
+PLUGIN_NAME = 'openstack_nova'
 INTERVAL = openstack.INTERVAL
 
 
@@ -63,7 +63,7 @@ class NovaInstanceStatsPlugin(openstack.CollectdPlugin):
             yield {
                 'plugin_instance': 'instances',
                 'values': len(list(g)),
-                'type_instance': status,
+                'meta': {'state': status, 'discard_hostname': True},
             }
 
 
