@@ -1,0 +1,47 @@
+---
+driver:
+  name: docker
+  hostname: collectd.ci.local
+  use_sudo: false
+
+provisioner:
+  name: salt_solo
+  salt_install: bootstrap
+  salt_bootstrap_url: https://bootstrap.saltstack.com
+  salt_version: latest
+  require_chef: false
+  log_level: error
+  formula: collectd
+  grains:
+    noservices: True
+  state_top:
+    base:
+      "*":
+        - collectd
+  pillars:
+    top.sls:
+      base:
+        "*":
+          - collectd
+  dependencies:
+    - name: linux
+      repo: git
+      source: https://github.com/salt-formulas/salt-formula-linux
+
+verifier:
+  name: inspec
+  sudo: true
+
+platforms:
+  - name: <%=ENV['PLATFORM'] || 'ubuntu-xenial'%>
+    driver_config:
+      image: <%=ENV['PLATFORM'] || 'trevorj/salty-whales:xenial'%>
+      platform: ubuntu
+
+suites:
+
+  - name: client
+    provisioner:
+      pillars-from-files:
+        collectd.sls: tests/pillar/client.sls
+# vim: ft=yaml sw=2 ts=2 sts=2 tw=125
