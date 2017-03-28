@@ -111,13 +111,18 @@ class OSClient(object):
             endpoint = item['endpoints'][0]
             if self.region and self.region != endpoint['region']:
                 continue
+            if 'internalURL' not in endpoint and 'publicURL' not in endpoint:
+                self.logger.warning(
+                    "Skipping service '{}' with no valid URL".format(
+                        endpoint["name"]
+                    )
+                )
+                continue
 
             self.service_catalog.append({
                 'name': item['name'],
                 'region': endpoint['region'],
-                'service_type': item['type'],
-                'url': endpoint['internalURL'],
-                'admin_url': endpoint['adminURL'],
+                'url': endpoint.get('internalURL', endpoint.get('publicURL')),
             })
 
         self.logger.debug("Got token '%s'" % self.token)
