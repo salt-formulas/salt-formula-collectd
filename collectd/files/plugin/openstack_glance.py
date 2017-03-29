@@ -40,6 +40,19 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
 
     def itermetrics(self):
 
+        def default_metrics(suffix=''):
+            ret = {}
+            for name in ('snapshots', 'images'):
+                for visibility in ('public', 'private',
+                                   'community', 'shared'):
+                    for status in ('active', 'queued', 'saving',
+                                   'killed', 'deleted', 'deactivated',
+                                   'pending_delete'):
+                        key = '%s%s.%s.%s' % (name, suffix,
+                                              visibility, status)
+                        ret[key] = 0
+            return ret
+
         def is_snap(d):
             return d.get('image_type') == 'snapshot'
 
@@ -56,6 +69,8 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
                                           detail=False)
         status = self.count_objects_group_by(images_details,
                                              group_by_func=groupby)
+        if len(status) == 0:
+            status = default_metrics()
         for s, nb in status.iteritems():
             (name, visibility, state) = s.split('.')
             yield {
@@ -79,6 +94,8 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
         sizes = self.count_objects_group_by(images_details,
                                             group_by_func=groupby_size,
                                             count_func=count_size_bytes)
+        if len(sizes) == 0:
+            sizes = default_metrics('_size')
         for s, nb in sizes.iteritems():
             (name, visibility, state) = s.split('.')
             yield {
