@@ -23,6 +23,13 @@ import collectd_openstack as openstack
 
 PLUGIN_NAME = 'openstack_cinder'
 INTERVAL = openstack.INTERVAL
+volumes_statuses = ('creating', 'available', 'attaching',
+                    'in-use', 'deleting', 'error',
+                    'error-deleting', 'backing-up',
+                    'restoring-backup', 'error_restoring',
+                    'error_extending')
+snapshots_statuses = ('creating', 'available', 'deleting',
+                      'error', 'error_deleting')
 
 
 class CinderStatsPlugin(openstack.CollectdPlugin):
@@ -38,11 +45,18 @@ class CinderStatsPlugin(openstack.CollectdPlugin):
         self.interval = INTERVAL
         self.pagination_limit = 500
 
-    def itermetrics(self):
+    @staticmethod
+    def gen_metric(name, nb, state):
+        return {
+            'plugin_instance': name,
+            'values': nb,
+            'meta': {
+                'state': state,
+                'discard_hostname': True,
+            }
+        }
 
-        volumes_details = self.get_objects('cinderv2', 'volumes',
-                                           params={'all_tenants': 1},
-                                           detail=True)
+    def itermetrics(self):
 
         def groupby(d):
             return d.get('status', 'unknown').lower()
@@ -50,45 +64,44 @@ class CinderStatsPlugin(openstack.CollectdPlugin):
         def count_size_bytes(d):
             return d.get('size', 0) * 10 ** 9
 
-        status = self.count_objects_group_by(volumes_details,
-                                             group_by_func=groupby)
-        for s, nb in status.iteritems():
-            yield {
-                'plugin_instance': 'volumes',
-                'values': nb,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
+        vols_details = self.get_objects('cinderv2', 'volumes',
+                                        params={'all_tenants': 1},
+                                        detail=True)
+        vols_status = self.count_objects_group_by(vols_details,
+                                                  group_by_func=groupby)
+        for status in volumes_statuses:
+            nb = vols_status.get(status, 0)
+            yield CinderStatsPlugin.gen_metric('volumes',
+                                               nb,
+                                               status)
 
-        sizes = self.count_objects_group_by(volumes_details,
-                                            group_by_func=groupby,
-                                            count_func=count_size_bytes)
-        for s, size in sizes.iteritems():
-            yield {
-                'plugin_instance': 'volumes_size',
-                'values': size,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
+        vols_sizes = self.count_objects_group_by(vols_details,
+                                                 group_by_func=groupby,
+                                                 count_func=count_size_bytes)
+        for status in volumes_statuses:
+            nb = vols_sizes.get(status, 0)
+            yield CinderStatsPlugin.gen_metric('volumes_size',
+                                               nb,
+                                               status)
 
         snaps_details = self.get_objects('cinderv2', 'snapshots',
                                          params={'all_tenants': 1})
-        status_snaps = self.count_objects_group_by(snaps_details,
+        snaps_status = self.count_objects_group_by(snaps_details,
                                                    group_by_func=groupby)
-        for s, nb in status_snaps.iteritems():
-            yield {
-                'plugin_instance': 'snapshots',
-                'values': nb,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
+        for status in snapshots_statuses:
+            nb = snaps_status.get(status, 0)
+            yield CinderStatsPlugin.gen_metric('snapshots',
+                                               nb,
+                                               status)
 
-        sizes = self.count_objects_group_by(snaps_details,
-                                            group_by_func=groupby,
-                                            count_func=count_size_bytes)
-        for n, size in sizes.iteritems():
-            yield {
-                'plugin_instance': 'snapshots_size',
-                'values': size,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
+        snaps_sizes = self.count_objects_group_by(snaps_details,
+                                                  group_by_func=groupby,
+                                                  count_func=count_size_bytes)
+        for status in snapshots_statuses:
+            nb = snaps_sizes.get(status, 0)
+            yield CinderStatsPlugin.gen_metric('snapshots_size',
+                                               nb,
+                                               status)
 
 
 plugin = CinderStatsPlugin(collectd, PLUGIN_NAME, disable_check_metric=True)
@@ -104,6 +117,7 @@ def notification_callback(notification):
 
 def read_callback():
     plugin.conditional_read_callback()
+
 
 if __name__ == '__main__':
     import time
