@@ -1,4 +1,3 @@
-
 collectd:
   client:
     enabled: true
@@ -8,4 +7,7 @@ collectd:
         engine: carbon
         host: 127.0.0.1
         port: 2023
-
+linux:
+  system:
+    name: hostname
+    domain: domain
