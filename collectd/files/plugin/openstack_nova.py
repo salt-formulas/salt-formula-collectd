@@ -25,6 +25,11 @@ from itertools import groupby
 
 PLUGIN_NAME = 'openstack_nova'
 INTERVAL = openstack.INTERVAL
+server_statuses = ('active', 'building', 'deleted', 'error',
+                   'hard_reboot', 'migrating', 'password',
+                   'paused', 'reboot', 'rebuild', 'rescued',
+                   'resized', 'revert_resize', 'soft_deleted',
+                   'stopped', 'suspended', 'unknown', 'verify_resize')
 
 
 class NovaInstanceStatsPlugin(openstack.CollectdPlugin):
@@ -38,6 +43,17 @@ class NovaInstanceStatsPlugin(openstack.CollectdPlugin):
         self.interval = INTERVAL
         self.pagination_limit = 500
         self._cache = {}
+
+    @staticmethod
+    def gen_metric(name, nb, state):
+        return {
+            'plugin_instance': name,
+            'values': nb,
+            'meta': {
+                'state': state,
+                'discard_hostname': True,
+            }
+        }
 
     def itermetrics(self):
         server_details = self.get_objects('nova', 'servers',
@@ -59,12 +75,12 @@ class NovaInstanceStatsPlugin(openstack.CollectdPlugin):
                 self._cache[_id] = status
 
         servers = sorted(self._cache.values())
-        for status, g in groupby(servers):
-            yield {
-                'plugin_instance': 'instances',
-                'values': len(list(g)),
-                'meta': {'state': status, 'discard_hostname': True},
-            }
+        servers_status = {s: list(g) for s, g in groupby(servers)}
+        for status in server_statuses:
+            nb = len(servers_status.get(status, []))
+            yield NovaInstanceStatsPlugin.gen_metric('instances',
+                                                     nb,
+                                                     status)
 
 
 plugin = NovaInstanceStatsPlugin(collectd, PLUGIN_NAME,
@@ -81,6 +97,7 @@ def notification_callback(notification):
 
 def read_callback():
     plugin.conditional_read_callback()
+
 
 if __name__ == '__main__':
     import time
