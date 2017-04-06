@@ -75,7 +75,7 @@ class NeutronStatsPlugin(openstack.CollectdPlugin):
         yield {
             'plugin_instance': 'networks',
             'type_instance': 'total',
-            'values': len(status),
+            'values': len(networks),
             'meta': {'discard_hostname': True},
         }
 
