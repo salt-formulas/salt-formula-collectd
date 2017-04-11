@@ -140,6 +140,7 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
                     'meta': {
                         'aggregate': agg,
                         'aggregate_id': agg_id,
+                        'meta': {'discard_hostname': True}
                     }
                 }
         # Dispatch the global metrics
@@ -147,6 +148,7 @@ class HypervisorStatsPlugin(openstack.CollectdPlugin):
             yield {
                 'type_instance': 'total_{}'.format(k),
                 'values': v,
+                'meta': {'discard_hostname': True}
             }
 
 plugin = HypervisorStatsPlugin(collectd, PLUGIN_NAME,
