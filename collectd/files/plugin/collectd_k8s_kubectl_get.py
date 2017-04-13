@@ -36,6 +36,7 @@ class K8sPlugin(base.Base):
         self.polling_interval = INTERVAL
         self.resources = []
         self._get_nodes = False
+        self.timeout = 10
 
     def shutdown_callback(self):
         for tid, t in self._threads.items():
@@ -58,7 +59,9 @@ class K8sPlugin(base.Base):
         def kubectl_poller():
             cmd = [KUBECTL_BINARY, 'get', '-o', 'json', resource]
             data = self.execute_to_json(cmd, shell=False, log_error=True)
-            return data.get('items', [])
+            if data:
+                return data.get('items', [])
+            return []
 
         if resource not in self._threads:
             t = base.AsyncPoller(self.collectd,

@@ -31,6 +31,7 @@ class DockerInfoPlugin(base.Base):
     def __init__(self, *args, **kwargs):
         super(DockerInfoPlugin, self).__init__(*args, **kwargs)
         self.plugin = NAME
+        self.timeout = 3
 
     def itermetrics(self):
         cmd = [DOCKER_BINARY, 'info', '-f', "{{ json .}}"]
