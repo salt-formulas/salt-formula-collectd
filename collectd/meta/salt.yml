@@ -1,0 +1,6 @@
+grain:
+  {%- if pillar.collectd.client is defined %}
+  {%- from "collectd/map.jinja" import service_grains with context -%}
+  collectd:
+    {{ service_grains|yaml(False)|indent(4) }}
+  {%- endif %}
