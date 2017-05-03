@@ -23,6 +23,10 @@ import collectd_openstack as openstack
 
 PLUGIN_NAME = 'openstack_glance'
 INTERVAL = openstack.INTERVAL
+image_types = ('snapshots', 'images')
+visibilities = ('public', 'private', 'community', 'shared')
+statuses = ('active', 'queued', 'saving', 'killed', 'deleted',
+            'deactivated', 'pending_delete')
 
 
 class GlanceStatsPlugin(openstack.CollectdPlugin):
@@ -38,20 +42,19 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
         self.interval = INTERVAL
         self.pagination_limit = 25
 
-    def itermetrics(self):
+    @staticmethod
+    def gen_metric(name, nb, visibility, state):
+        return {
+            'plugin_instance': name,
+            'values': nb,
+            'meta': {
+                'visibility': visibility,
+                'state': state,
+                'discard_hostname': True,
+            }
+        }
 
-        def default_metrics(suffix=''):
-            ret = {}
-            for name in ('snapshots', 'images'):
-                for visibility in ('public', 'private',
-                                   'community', 'shared'):
-                    for status in ('active', 'queued', 'saving',
-                                   'killed', 'deleted', 'deactivated',
-                                   'pending_delete'):
-                        key = '%s%s.%s.%s' % (name, suffix,
-                                              visibility, status)
-                        ret[key] = 0
-            return ret
+    def itermetrics(self):
 
         def is_snap(d):
             return d.get('image_type') == 'snapshot'
@@ -67,18 +70,19 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
                                           api_version='v2',
                                           params={},
                                           detail=False)
-        status = self.count_objects_group_by(images_details,
-                                             group_by_func=groupby)
-        if len(status) == 0:
-            status = default_metrics()
-        for s, nb in status.iteritems():
-            (name, visibility, state) = s.split('.')
-            yield {
-                'plugin_instance': name,
-                'values': nb,
-                'meta': {'visibility': visibility, 'state': state,
-                         'discard_hostname': True}
-            }
+        img_status = self.count_objects_group_by(images_details,
+                                                 group_by_func=groupby)
+        for name in image_types:
+            for visibility in visibilities:
+                for status in statuses:
+                    nb = img_status.get('{}.{}.{}'.format(name,
+                                                          visibility,
+                                                          status),
+                                        0)
+                    yield GlanceStatsPlugin.gen_metric(name,
+                                                       nb,
+                                                       visibility,
+                                                       status)
 
         # sizes
         def count_size_bytes(d):
@@ -91,19 +95,21 @@ class GlanceStatsPlugin(openstack.CollectdPlugin):
                 return 'snapshots_size.%s.%s' % (p, status)
             return 'images_size.%s.%s' % (p, status)
 
-        sizes = self.count_objects_group_by(images_details,
-                                            group_by_func=groupby_size,
-                                            count_func=count_size_bytes)
-        if len(sizes) == 0:
-            sizes = default_metrics('_size')
-        for s, nb in sizes.iteritems():
-            (name, visibility, state) = s.split('.')
-            yield {
-                'plugin_instance': name,
-                'values': nb,
-                'meta': {'visibility': visibility, 'state': state,
-                         'discard_hostname': True},
-            }
+        img_sizes = self.count_objects_group_by(images_details,
+                                                group_by_func=groupby_size,
+                                                count_func=count_size_bytes)
+        for name in image_types:
+            for visibility in visibilities:
+                for status in statuses:
+                    nb = img_sizes.get('{}_size.{}.{}'.format(name,
+                                                              visibility,
+                                                              status),
+                                       0)
+                    yield GlanceStatsPlugin.gen_metric('{}_size'.format(name),
+                                                       nb,
+                                                       visibility,
+                                                       status)
+
 
 plugin = GlanceStatsPlugin(collectd, PLUGIN_NAME, disable_check_metric=True)
 
@@ -118,6 +124,7 @@ def notification_callback(notification):
 
 def read_callback():
     plugin.conditional_read_callback()
+
 
 if __name__ == '__main__':
     import time
