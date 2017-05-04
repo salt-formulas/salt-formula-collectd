@@ -25,10 +25,3 @@ collectd_client_packages:
 /usr/lib/collectd-python:
   file.recurse:
   - source: salt://collectd/files/plugin
-
-collectd_client_grains_dir:
-  file.directory:
-  - name: /etc/salt/grains.d
-  - mode: 700
-  - makedirs: true
-  - user: root
