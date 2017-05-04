@@ -14,8 +14,7 @@ include:
 
 {%- set service_grains = {'collectd': {'remote_plugin': {}, 'local_plugin': {}}} %}
 
-{%- for service_name in pillar.keys()|sort %}
-  {%- set service = salt['pillar.items'](service_name)[service_name] %}
+{%- for service_name, service in pillar.items() %}
   {%- if service.get('_support', {}).get('collectd', {}).get('enabled', False) %}
     {%- set grains_fragment_file = service_name+'/meta/collectd.yml' %}
     {%- macro load_grains_file() %}{% include grains_fragment_file ignore missing %}{% endmacro %}
