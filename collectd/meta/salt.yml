@@ -1,5 +1,5 @@
 grain:
-  {%- if pillar.collectd.client is defined %}
+  {%- if pillar.get('collectd', {}).get('client') %}
     {%- set service_grains = {'collectd': {'remote_plugin': {}, 'local_plugin': {}}} %}
 
     {%- for service_name, service in pillar.items() %}
