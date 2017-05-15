@@ -131,7 +131,7 @@
   - group: root
   - mode: 660
   - defaults:
-    backend: {{ backend|yaml }}
+    network_backend: {{ network_backend|yaml }}
   - require:
     - file: {{ client.service }}_client_conf_dir
   - require_in:
