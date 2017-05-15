@@ -23,6 +23,9 @@ import collectd_openstack as openstack
 
 PLUGIN_NAME = 'openstack_neutron'
 INTERVAL = openstack.INTERVAL
+all_states = ('active', 'down', 'build', 'error', 'unknown')
+port_owners = ('compute', 'none')
+floating_ip_states = (None, 'associated')
 
 
 class NeutronStatsPlugin(openstack.CollectdPlugin):
@@ -40,6 +43,18 @@ class NeutronStatsPlugin(openstack.CollectdPlugin):
         self.plugin = PLUGIN_NAME
         self.interval = INTERVAL
         self.pagination_limit = 100
+
+    @staticmethod
+    def gen_metric(name, nb, type_instance=None, meta={}):
+        metric = {
+            'plugin_instance': name,
+            'values': nb,
+        }
+        if type_instance:
+            metric['type_instance'] = type_instance
+        metric['meta'] = meta
+        metric['meta']['discard_hostname'] = True
+        return metric
 
     def itermetrics(self):
 
@@ -66,24 +81,21 @@ class NeutronStatsPlugin(openstack.CollectdPlugin):
                                     params={'fields': ['id', 'status']})
         status = self.count_objects_group_by(networks,
                                              group_by_func=groupby_status)
-        for s, nb in status.iteritems():
-            yield {
-                'plugin_instance': 'networks',
-                'values': nb,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
-        yield {
-            'plugin_instance': 'networks',
-            'type_instance': 'total',
-            'values': len(networks),
-            'meta': {'discard_hostname': True},
-        }
+        for s in all_states:
+            nb = status.get(s, 0)
+            yield NeutronStatsPlugin.gen_metric(
+                'networks',
+                nb,
+                None,
+                {
+                    'state': s,
+                })
+        yield NeutronStatsPlugin.gen_metric('networks', len(networks), 'total')
 
         # Subnets
         subnets = self.get_objects('neutron', 'subnets', api_version='v2.0',
                                    params={'fields': ['id']})
-        yield {'plugin_instance': 'subnets', 'values': len(subnets),
-               'meta': {'discard_hostname': True}}
+        yield NeutronStatsPlugin.gen_metric('subnets', len(subnets))
 
         # Ports
         ports = self.get_objects('neutron', 'ports', api_version='v2.0',
@@ -91,38 +103,34 @@ class NeutronStatsPlugin(openstack.CollectdPlugin):
                                                     'device_owner']})
         status = self.count_objects_group_by(ports,
                                              group_by_func=groupby_port)
-        for s, nb in status.iteritems():
-            (owner, state) = s.split('.')
-            yield {
-                'plugin_instance': 'ports',
-                'values': nb,
-                'meta': {'state': state, 'owner': owner,
-                         'discard_hostname': True}
-            }
-        yield {
-            'plugin_instance': 'ports',
-            'type_instance': 'total',
-            'values': len(ports),
-            'meta': {'discard_hostname': True},
-        }
+        for o in port_owners:
+            for s in all_states:
+                nb = status.get('{}.{}'.format(o, s), 0)
+                yield NeutronStatsPlugin.gen_metric(
+                    'ports',
+                    nb,
+                    None,
+                    {
+                        'state': s,
+                        'owner': o,
+                    })
+        yield NeutronStatsPlugin.gen_metric('ports', len(ports), 'total')
 
         # Routers
         routers = self.get_objects('neutron', 'routers', api_version='v2.0',
                                    params={'fields': ['id', 'status']})
         status = self.count_objects_group_by(routers,
                                              group_by_func=groupby_status)
-        for s, nb in status.iteritems():
-            yield {
-                'plugin_instance': 'routers',
-                'values': nb,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
-        yield {
-            'plugin_instance': 'routers',
-            'type_instance': 'total',
-            'values': len(routers),
-            'meta': {'discard_hostname': True},
-        }
+        for s in all_states:
+            nb = status.get(s, 0)
+            yield NeutronStatsPlugin.gen_metric(
+                'routers',
+                nb,
+                None,
+                {
+                    'state': s,
+                })
+        yield NeutronStatsPlugin.gen_metric('routers', len(routers), 'total')
 
         # Floating IP addresses
         floatingips = self.get_objects('neutron', 'floatingips',
@@ -131,18 +139,17 @@ class NeutronStatsPlugin(openstack.CollectdPlugin):
                                                           'port_id']})
         status = self.count_objects_group_by(floatingips,
                                              group_by_func=groupby_floating)
-        for s, nb in status.iteritems():
-            yield {
-                'plugin_instance': 'floatingips',
-                'values': nb,
-                'meta': {'state': s, 'discard_hostname': True}
-            }
-        yield {
-            'plugin_instance': 'floatingips',
-            'type_instance': 'total',
-            'values': len(floatingips),
-            'meta': {'discard_hostname': True},
-        }
+        for s in floating_ip_states:
+            nb = status.get(s, 0)
+            yield NeutronStatsPlugin.gen_metric(
+                'floatingips',
+                nb,
+                None,
+                {
+                    'state': s,
+                })
+        yield NeutronStatsPlugin.gen_metric('floatingips', len(floatingips),
+                                            'total')
 
 
 plugin = NeutronStatsPlugin(collectd, PLUGIN_NAME, disable_check_metric=True)
@@ -158,6 +165,7 @@ def notification_callback(notification):
 
 def read_callback():
     plugin.conditional_read_callback()
+
 
 if __name__ == '__main__':
     import time
