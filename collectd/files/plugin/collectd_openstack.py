@@ -108,9 +108,18 @@ class OSClient(object):
             data['access']['token']['expires']) - self.EXPIRATION_TOKEN_DELTA
         self.service_catalog = []
         for item in data['access']['serviceCatalog']:
-            endpoint = item['endpoints'][0]
-            if self.region and self.region != endpoint['region']:
-                continue
+            endpoint = False
+            if self.region:
+                for e in item['endpoints']:
+                    if self.region == e['region']:
+                        endpoint = e
+                if not endpoint:
+                    continue
+            else:
+                # If no region is defined, I guess we'll just keep the old
+                # behavior of picking the first one.
+                endpoint = item['endpoints'][0]
+
             if 'internalURL' not in endpoint and 'publicURL' not in endpoint:
                 self.logger.warning(
                     "Skipping service '{}' with no valid URL".format(
