@@ -14,7 +14,7 @@ MAXWAIT=30
 # default: 0
 ENABLE_COREFILES=0
 {%- set java_ld_library_path = '' %}
-{%- set java_lib = salt['cmd.run']('type java >/dev/null 2>&1 && find /usr/lib/jvm -name libjvm.so -type f') %}
+{%- set java_lib = salt['cmd.shell']('type java >/dev/null 2>&1 && find /usr/lib/jvm -name libjvm.so -type f') %}
 {%- if java_lib|length > 0 %}
   {%- set java_path = '/'.join(java_lib.split('/')[:-1]) %}
   {%- set java_ld_library_path = 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:' ~ java_path %}
