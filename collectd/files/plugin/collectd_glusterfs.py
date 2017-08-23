@@ -23,6 +23,9 @@ import collectd_base as base
 
 NAME = 'glusterfs'
 GLUSTER_BINARY = '/usr/sbin/gluster'
+# Increase the default collection interval because GlusterFS doesn't cope well
+# with concurrent client requests
+INTERVAL = 120
 
 peer_re = re.compile(r'^Hostname: (?P<peer>.+)$', re.MULTILINE)
 state_re = re.compile(r'^State: (?P<state>.+)$', re.MULTILINE)
@@ -59,6 +62,7 @@ class GlusterfsPlugin(base.Base):
     def __init__(self, *args, **kwargs):
         super(GlusterfsPlugin, self).__init__(*args, **kwargs)
         self.plugin = NAME
+        self.interval = INTERVAL
 
     def itermetrics(self):
         # Collect peers' metrics
@@ -237,4 +241,4 @@ if __name__ == '__main__':
 else:
     collectd.register_init(init_callback)
     collectd.register_config(config_callback)
-    collectd.register_read(read_callback)
+    collectd.register_read(read_callback, INTERVAL)
