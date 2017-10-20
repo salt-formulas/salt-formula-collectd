@@ -53,6 +53,8 @@ class APICheckPlugin(openstack.CollectdPlugin):
         super(APICheckPlugin, self).__init__(*args, **kwargs)
         self.plugin = PLUGIN_NAME
         self.interval = INTERVAL
+        self.timeout = 2
+        self.max_retries = 1
 
     def _service_url(self, endpoint, path):
         url = urlparse(endpoint)
