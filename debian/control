@@ -10,6 +10,6 @@ Vcs-Git: https://github.com/tcpcloud/salt-formula-collectd.git
 
 Package: salt-formula-collectd
 Architecture: all
-Depends: ${misc:Depends}, salt-master, reclass
+Depends: ${misc:Depends}
 Description: Collectd salt formula
  Install and configure Collectd service.
